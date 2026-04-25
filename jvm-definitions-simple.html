@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JVM Definitions — Simple but Deep</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Fraunces:ital,wght@0,300;0,600;0,900;1,300;1,600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #f5f0e8;
+  --surface: #fffdf8;
+  --surface2: #f0ebe0;
+  --ink: #1a1612;
+  --ink2: #4a4035;
+  --ink3: #8a7a65;
+  --rule: #d8cfc0;
+  --rule2: #c0b5a0;
+  --red: #c0392b;
+  --blue: #1a5276;
+  --green: #1a7a4a;
+  --orange: #b7500a;
+  --purple: #5b2d8e;
+  --teal: #0a6b6b;
+  --mono: 'IBM Plex Mono', monospace;
+  --serif: 'Fraunces', serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.65;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23f5f0e8'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23e8e0d0' opacity='0.4'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+header {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 40px 48px 36px;
+  position: relative;
+  z-index: 1;
+}
+.h-eyebrow { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink3); margin-bottom: 10px; }
+header h1 { font-family: var(--serif); font-size: 36px; font-weight: 900; letter-spacing: -1px; line-height: 1; color: var(--bg); }
+header h1 em { font-style: italic; font-weight: 300; color: #c8b890; }
+.h-sub { margin-top: 10px; font-size: 11px; color: #6a5e50; letter-spacing: 1px; }
+
+.filter-bar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--ink); border-bottom: 2px solid #2a2218;
+  padding: 12px 48px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+.filter-btn {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  border: 1px solid #3a3025; background: transparent; color: #6a5e50;
+  padding: 5px 12px; border-radius: 2px; cursor: pointer; transition: all 0.15s;
+}
+.filter-btn:hover, .filter-btn.active { border-color: #c8b890; color: #c8b890; background: rgba(200,184,144,0.08); }
+.search-box {
+  margin-left: auto; font-family: var(--mono); font-size: 11px;
+  background: #1a1612; border: 1px solid #3a3025; color: #c8b890;
+  padding: 5px 12px; border-radius: 2px; width: 200px; outline: none;
+}
+.search-box::placeholder { color: #4a4035; }
+.search-box:focus { border-color: #c8b890; }
+
+main { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 40px 48px 100px; }
+
+.cat-header {
+  display: flex; align-items: baseline; gap: 16px;
+  margin: 44px 0 18px; padding-bottom: 10px; border-bottom: 2px solid var(--ink);
+}
+.cat-header:first-child { margin-top: 0; }
+.cat-num { font-family: var(--serif); font-size: 44px; font-weight: 900; color: var(--rule2); line-height: 1; letter-spacing: -2px; }
+.cat-name { font-family: var(--serif); font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+.cat-count { font-size: 10px; letter-spacing: 1.5px; color: var(--ink3); text-transform: uppercase; margin-left: auto; }
+
+.def-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; }
+
+/* CARD */
+.def-card {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 3px;
+  overflow: hidden; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;
+}
+.def-card:hover { box-shadow: 4px 4px 0 var(--rule2); transform: translate(-1px,-1px); }
+.def-card.flipped .card-front { display: none; }
+.def-card.flipped .card-back { display: block; }
+.card-front, .card-back { display: block; }
+.card-back { display: none; }
+
+.card-top {
+  padding: 14px 16px 12px; border-bottom: 1px solid var(--rule);
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+.card-term { font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: -0.2px; line-height: 1.25; }
+.card-tag {
+  font-size: 9px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 2px; flex-shrink: 0; margin-top: 2px;
+}
+.tag-startup  { background:rgba(10,107,107,.1);  color:var(--teal);   border:1px solid rgba(10,107,107,.2);  }
+.tag-classload{ background:rgba(26,82,118,.1);   color:var(--blue);   border:1px solid rgba(26,82,118,.2);   }
+.tag-memory   { background:rgba(91,45,142,.1);   color:var(--purple); border:1px solid rgba(91,45,142,.2);   }
+.tag-stack    { background:rgba(26,122,74,.1);   color:var(--green);  border:1px solid rgba(26,122,74,.2);   }
+.tag-jit      { background:rgba(183,80,10,.1);   color:var(--orange); border:1px solid rgba(183,80,10,.2);   }
+.tag-heap     { background:rgba(192,57,43,.1);   color:var(--red);    border:1px solid rgba(192,57,43,.2);   }
+.tag-gc       { background:rgba(26,22,18,.07);   color:var(--ink2);   border:1px solid rgba(26,22,18,.15);   }
+
+.card-body { padding: 14px 16px; }
+
+/* Simple explanation box */
+.simple-box {
+  background: #fffbf2;
+  border-left: 3px solid #c8a84b;
+  border-radius: 0 3px 3px 0;
+  padding: 10px 13px;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--ink);
+}
+.simple-label {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: #a08030; font-weight: 600; display: block; margin-bottom: 5px;
+}
+
+/* Deep concept box */
+.deep-box {
+  background: var(--surface2);
+  border-left: 3px solid var(--rule2);
+  border-radius: 0 3px 3px 0;
+  padding: 10px 13px;
+  margin-bottom: 10px;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--ink2);
+}
+.deep-label {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--rule2); font-weight: 600; display: block; margin-bottom: 5px;
+}
+.deep-box strong { color: var(--ink); }
+.deep-box code {
+  background: rgba(26,22,18,.07); padding: 1px 5px; border-radius: 2px;
+  font-size: 10.5px; color: var(--ink);
+}
+
+/* Example / analogy box */
+.eg-box {
+  background: rgba(26,82,118,0.04);
+  border-left: 3px solid rgba(26,82,118,0.3);
+  border-radius: 0 3px 3px 0;
+  padding: 10px 13px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--ink3);
+}
+.eg-label {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(26,82,118,0.5); font-weight: 600; display: block; margin-bottom: 5px;
+}
+.eg-box strong { color: var(--ink2); }
+.eg-box code {
+  background: rgba(26,22,18,.06); padding: 1px 5px; border-radius: 2px;
+  font-size: 10px; color: var(--ink);
+}
+
+/* BACK of card */
+.card-back .card-body { background: var(--ink); min-height: 120px; }
+.card-back .card-top { background: var(--ink); border-bottom-color: #2a2218; }
+.card-back .card-term { color: #c8b890; font-style: italic; }
+
+.answer-box {
+  background: rgba(200,184,144,0.06);
+  border-left: 3px solid #c8b890;
+  border-radius: 0 3px 3px 0;
+  padding: 12px 13px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #b0a080;
+}
+.answer-label {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: #c8b890; font-weight: 600; display: block; margin-bottom: 6px;
+}
+.answer-box strong { color: #e8d8b0; }
+.answer-box code { background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 2px; font-size: 10.5px; color: #c8b890; }
+
+.watch-box {
+  background: rgba(192,57,43,0.08);
+  border-left: 3px solid rgba(192,57,43,0.4);
+  border-radius: 0 3px 3px 0;
+  padding: 10px 13px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #8a4035;
+}
+.watch-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(192,57,43,0.5); font-weight: 600; display: block; margin-bottom: 5px; }
+.watch-box strong { color: #b05040; }
+.watch-box code { background: rgba(255,255,255,.05); padding: 1px 5px; border-radius: 2px; font-size: 10px; }
+
+.flip-hint { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--rule2); text-align: right; padding: 8px 16px; border-top: 1px solid var(--rule); }
+.card-back .flip-hint { border-top-color: #2a2218; color: #3a3025; }
+
+/* PROGRESS */
+.progress-bar-wrap {
+  position: sticky; bottom: 0; z-index: 100;
+  background: var(--ink); padding: 10px 48px;
+  display: flex; align-items: center; gap: 14px; border-top: 1px solid #2a2218;
+}
+.pb-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #6a5e50; }
+.pb-track { flex: 1; height: 4px; background: #2a2218; border-radius: 2px; overflow: hidden; }
+.pb-fill { height: 100%; background: linear-gradient(90deg, #c8b890, #a09060); border-radius: 2px; transition: width 0.4s; width: 0%; }
+.pb-count { font-size: 10px; color: #c8b890; letter-spacing: 1px; }
+.pb-reset { font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; background: transparent; border: 1px solid #3a3025; color: #6a5e50; padding: 4px 10px; border-radius: 2px; cursor: pointer; }
+.pb-reset:hover { border-color: #c8b890; color: #c8b890; }
+.hidden { display: none !important; }
+
+@media(max-width:700px){
+  header, .filter-bar, main, .progress-bar-wrap { padding-left: 16px; padding-right: 16px; }
+  .def-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-eyebrow">▸ JDK 25 · Simple Language · Deep Concepts</div>
+  <h1>JVM Definitions <em>— Plain English</em></h1>
+  <div class="h-sub">Every card: plain English first → then how it actually works under the hood → flip for the interview answer</div>
+</header>
+
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filterCards('all',this)">All</button>
+  <button class="filter-btn" onclick="filterCards('startup',this)">Startup</button>
+  <button class="filter-btn" onclick="filterCards('classload',this)">Class Loading</button>
+  <button class="filter-btn" onclick="filterCards('memory',this)">Memory</button>
+  <button class="filter-btn" onclick="filterCards('stack',this)">Stack</button>
+  <button class="filter-btn" onclick="filterCards('jit',this)">JIT</button>
+  <button class="filter-btn" onclick="filterCards('heap',this)">Heap/Object</button>
+  <button class="filter-btn" onclick="filterCards('gc',this)">GC</button>
+  <input class="search-box" type="text" placeholder="Search term..." oninput="searchCards(this.value)"/>
+</div>
+
+<main id="main-content">
+
+<!-- ═══════════════════════════════════════════
+     01  STARTUP
+═══════════════════════════════════════════ -->
+<div class="cat-header" data-cat="startup">
+  <span class="cat-num">01</span>
+  <span class="cat-name">System Startup &amp; Bootstrapping</span>
+  <span class="cat-count">3 terms</span>
+</div>
+<div class="def-grid">
+
+  <div class="def-card" data-cat="startup" data-term="JNI_CreateJavaVM" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">JNI_CreateJavaVM()</span><span class="card-tag tag-startup">Startup</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Think of it as the <strong>power-on button for the JVM</strong>. When you type <code>java MyApp</code>, the OS doesn't know what Java is — it just runs a native program. That native program calls <code>JNI_CreateJavaVM()</code> which does everything needed to bring the JVM to life: checking your flags, picking a GC, setting up memory.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          It's a C++ function inside <code>libjvm.so</code>. It runs <strong>before any Java code ever executes</strong>. Steps: validate JVM args → profile CPU/RAM → select GC algorithm → allocate Metaspace → initialize thread system → hand control to the Bootstrap ClassLoader to load <code>java.lang.*</code>.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Real analogy</span>
+          Like turning on a PC. The BIOS (JNI_CreateJavaVM) runs first, sets everything up — screen, disk, memory — then hands off to the OS (your Java program).
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-startup">Startup</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "<strong>JNI_CreateJavaVM</strong> is the native C++ entry point that bootstraps the JVM. When you run <code>java MyApp</code>, the OS calls this function, which validates JVM flags, profiles hardware to auto-select a GC, allocates Metaspace, and initialises the threading system — all before a single line of Java runs."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Follow-up they might ask</span>
+          <strong>"What happens between typing <code>java MyApp</code> and <code>main()</code> being called?"</strong><br>
+          OS → JNI_CreateJavaVM → Bootstrap Loader loads <code>java.lang.*</code> → your main class is loaded (3-phase pipeline) → <code>&lt;clinit&gt;</code> runs → <code>main()</code> is called.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="startup" data-term="Metaspace" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Metaspace</span><span class="card-tag tag-startup">Startup</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Metaspace is where the JVM <strong>stores blueprints of your classes</strong> — not the objects themselves, just the class definitions (field names, method signatures, bytecode). It lives completely <em>outside</em> the Java heap, in native OS memory.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Split into two sub-regions: <strong>Compressed Class Space</strong> (contiguous, 32-bit shifted pointers, stores Klass structs only) and <strong>Non-Class Metaspace</strong> (fragmented okay, full 64-bit pointers, stores bytecode + Constant Pool + annotations). Replaced PermGen in JDK 8 — auto-grows instead of being fixed size. Cap with <code>-XX:MaxMetaspaceSize</code>.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Real analogy</span>
+          Java objects = houses. Metaspace = the city planning office that stores the architectural blueprints. You can build a million houses (objects on heap) but there's only one blueprint per house type (one Klass per class in Metaspace).
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-startup">Startup</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "<strong>Metaspace</strong> is native off-heap memory that stores class metadata — Klass structs, bytecode, Constant Pools, annotations. It replaced PermGen in JDK 8. The key difference: PermGen had a fixed max size, so you'd get <code>OutOfMemoryError: PermGen space</code> in Spring/Hibernate-heavy apps. Metaspace auto-expands, but you should still cap it with <code>-XX:MaxMetaspaceSize</code> to prevent unbounded native memory growth."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Watch out</span>
+          Heavy use of <strong>dynamic proxies, reflection, or runtime code generation</strong> (Spring AOP, Hibernate, bytecode weavers) constantly loads new generated classes → Metaspace grows. This is still a real OOM risk even without PermGen.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="startup" data-term="GC Auto-Selection" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">GC Auto-Selection</span><span class="card-tag tag-startup">Startup</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          The JVM looks at your machine specs (how many CPU cores, how big is the heap) and <strong>automatically picks the best garbage collector for you</strong>. You don't have to choose — but you can override it.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Default is <strong>G1GC</strong> since JDK 9 for most machines. The JVM uses <em>ergonomics</em> — a set of heuristics — to pick: heap size hints from OS, available processors, and whether you're in a container (cgroups). ZGC is auto-selected if you explicitly want sub-millisecond pauses.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Override options</span>
+          <code>-XX:+UseG1GC</code> (default, balanced) · <code>-XX:+UseZGC</code> (sub-ms pauses, JDK 21+) · <code>-XX:+UseShenandoahGC</code> (RedHat GC, similar to ZGC) · <code>-XX:+UseSerialGC</code> (tiny heap, CLI tools)
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-startup">Startup</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "The JVM uses ergonomics to auto-select a GC at startup based on hardware. G1GC is the default since JDK 9 — it's a good balance of throughput and pause time for most server workloads. For latency-critical applications (trading, gaming), I'd override with ZGC which targets sub-millisecond pauses regardless of heap size."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Gotcha in containers</span>
+          Without JVM container-awareness flags, the JVM reads the <em>host's</em> CPU/RAM, not the container's cgroup limits. JDK 10+ fixes this automatically. On older JDKs, the JVM might think it has 64 cores when the container only has 2 → over-threads GC → performance disaster.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     02  CLASS LOADING
+═══════════════════════════════════════════ -->
+<div class="cat-header" data-cat="classload">
+  <span class="cat-num">02</span>
+  <span class="cat-name">Class Loading Pipeline</span>
+  <span class="cat-count">7 terms</span>
+</div>
+<div class="def-grid">
+
+  <div class="def-card" data-cat="classload" data-term="Parent Delegation Model" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Parent Delegation Model</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          When the JVM needs to load a class, it <strong>always asks the parent loader first</strong> before trying itself. It's like a kid asking dad before doing it himself. This chain goes: your App Loader → Platform Loader → Bootstrap Loader. Only if everyone above fails does the child try.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          This is a <strong>security mechanism</strong>. Without it, a malicious <code>java/lang/String.class</code> on your classpath could shadow the real one. Bootstrap Loader (native, no Java parent) always wins for core JDK classes — it's the only one that can load them. <strong>Two classes are equal only if their bytecode AND their ClassLoader instance are identical.</strong> Same class loaded by two different loaders = two completely different types.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Where it breaks down</span>
+          OSGi, hot-reload frameworks, and servlet containers deliberately <strong>break delegation</strong> (child-first loading) so each module/webapp gets its own isolated class version. This is also why you get <code>ClassCastException</code> with "same" class names across different ClassLoaders.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "The delegation model means every ClassLoader asks its parent first — App → Platform → Bootstrap. This prevents user code from hijacking core JDK classes. Crucially, class identity in the JVM = bytecode + ClassLoader, not just the class name. Same <code>.class</code> file loaded by two different loaders produces two incompatible types."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Classic interview trap</span>
+          <strong>"What does <code>String.class.getClassLoader()</code> return?"</strong><br>
+          <code>null</code> — because <code>String</code> is loaded by the Bootstrap ClassLoader which is native (C++) and has no Java representation. <code>null</code> == Bootstrap Loader.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="classload" data-term="Klass" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Klass (C++ Runtime Blueprint)</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          A Klass is the JVM's <strong>internal C++ representation of your Java class</strong>, stored in Metaspace. Every object on the heap has a tiny pointer back to its Klass so the JVM knows: what type is this? what methods does it have? what fields does it contain?
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          The Klass contains: <strong>vtable</strong> (array of method pointers for virtual dispatch), <strong>itable</strong> (interface method pointers), field layout offsets, references to bytecode in Non-Class Metaspace. In JDK 25 (JEP 519), each heap object holds a <em>compressed</em> Klass pointer packed into the 64-bit Mark Word — no longer a separate field.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Analogy</span>
+          If Java objects are cars, the Klass is the car model blueprint at the factory. Every Toyota Corolla (object) shares one Corolla blueprint (Klass) in the factory (Metaspace). You can build a million Corollas; there's still only one blueprint.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "A Klass is the JVM's internal C++ class descriptor stored in Metaspace. It contains the vtable for virtual method dispatch, field layout offsets, and pointers to bytecode. Every heap object has a compressed pointer back to its Klass — this is how <code>instanceof</code>, reflection, and polymorphic method calls work at the JVM level."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ JDK 25 change</span>
+          JEP 519 packed the Klass pointer <em>into</em> the Mark Word, eliminating it as a separate header field. This saved 4 bytes per object — massive at scale (100M objects = 400 MB saved).
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="classload" data-term="Bytecode Verification" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Bytecode Verification</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Before the JVM runs any class, it <strong>checks the bytecode is safe</strong> — like airport security for code. It ensures the bytecode won't try to read random memory, corrupt the stack, or type-cast illegally. Done once at load time, never again.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          The verifier performs <strong>data-flow analysis</strong> on each method's bytecode using stack map frames (metadata embedded in <code>.class</code> files since JDK 6). It checks: operand stack never underflows/overflows, every branch target is a valid instruction start, type of every value matches what the opcode expects, <code>this</code> is definitely initialised before use in constructors.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Why Java is memory-safe</span>
+          C/C++ has no verifier — a bug can read random memory. Java's verifier <em>mathematically proves</em> bytecode is safe before execution. This is the technical foundation of Java's "write once, run safely anywhere" claim.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Bytecode verification is Java's safety guarantee. Before executing any class, the JVM verifier proves the bytecode is type-safe using data-flow analysis on stack map frames. It catches corrupt or malicious bytecode before a single instruction runs. This is why Java doesn't get buffer overflows — the verifier makes certain class of memory bugs structurally impossible."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Can be disabled</span>
+          <code>-Xverify:none</code> skips verification — only ever used in startup-speed-critical builds where you 100% trust the bytecode source. Never in production.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="classload" data-term="Preparation Phase" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Preparation Phase</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          The JVM allocates memory for all <strong>static fields</strong> and gives them <strong>safe default zero values</strong> — before any of your code runs. So <code>int</code> → 0, <code>boolean</code> → false, <code>Object</code> → null. Your actual values (like <code>static int MAX = 100</code>) come later.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          This is the second sub-step of Linking. The JVM needs to guarantee that no field ever contains garbage memory — so it zeroes everything out first. <strong>Constants</strong> (<code>static final int X = 5</code> where 5 is a compile-time literal) are the one exception — they're assigned during Preparation because the compiler already inlined them.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Common interview trap</span>
+          <code>static int count = 100;</code><br>
+          After Preparation: count = <strong>0</strong> ← safe default<br>
+          After Initialization: count = <strong>100</strong> ← your value<br><br>
+          This is why accessing static fields during class loading (e.g., circular static initialisation) can give you 0 unexpectedly.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Preparation allocates memory for static fields and assigns type-default zero values — not the programmer's values. That's Initialization's job. This two-phase design guarantees every field has a defined value before any code references it, preventing undefined behaviour from uninitialized memory reads."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ The one exception</span>
+          <code>static final int CONSTANT = 42;</code> where 42 is a compile-time constant literal — assigned during Preparation, not Initialization. The compiler inlines it everywhere it's used anyway, so this is mostly an academic detail.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="classload" data-term="Constant Pool Resolution" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Constant Pool Resolution</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          A <code>.class</code> file doesn't store actual memory addresses — it stores <strong>symbolic names</strong> (like a phone book: "call ArrayList.add"). Resolution is the step where the JVM <strong>looks up those names and replaces them with real memory addresses</strong> so method calls become fast pointer jumps.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          The Constant Pool is a table in the <code>.class</code> file holding strings like <code>"java/util/ArrayList"</code>, <code>"add:(Ljava/lang/Object;)Z"</code>. Resolution walks this table and swaps each string with a direct C++ pointer to the Klass or method. <strong>Lazy by default</strong> — a symbolic ref is resolved the first time that specific instruction executes, not all upfront. This avoids loading classes that are declared but never used.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Ripple effect</span>
+          Resolving a reference to <code>ArrayList</code> triggers loading <code>ArrayList.class</code> if it isn't loaded yet — which triggers its own Verification → Preparation → Resolution chain. Class loading is recursive and lazy.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Resolution converts symbolic references in the Constant Pool — plain strings like method names — into direct runtime memory pointers. It's lazy: each reference is resolved the first time that bytecode instruction executes, not all at startup. This is why Java doesn't fail at startup for classes that are declared but never used."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ NoClassDefFoundError vs ClassNotFoundException</span>
+          <code>ClassNotFoundException</code> = class not found during loading. <code>NoClassDefFoundError</code> = class was found and compiled against, but missing at runtime during Resolution. The second is sneakier — it often means a dependency is on the compile classpath but not the runtime classpath.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="classload" data-term="clinit" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">&lt;clinit&gt; — Class Initializer</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          <code>&lt;clinit&gt;</code> is a <strong>hidden method the compiler generates</strong> to run all your static blocks and set your static field values. It runs exactly once — the very first time anyone uses the class — and the JVM guarantees only one thread can run it.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          The compiler collects all <code>static { }</code> blocks and <code>static field = value</code> assignments in <em>textual order</em> and puts them into <code>&lt;clinit&gt;</code>. The JVM guarantees: <strong>thread-safe execution</strong> (only one thread runs it; others block), <strong>exactly-once</strong> (idempotent), <strong>happens-before</strong> (all threads see the initialised state after it completes). This is the basis of the safe publication guarantee for static fields.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Design pattern it enables</span>
+          <strong>Initialization-on-Demand Holder</strong> singleton pattern works entirely because <code>&lt;clinit&gt;</code> is thread-safe and lazy:<br>
+          <code>private static class Holder { static final S INSTANCE = new S(); }</code><br>
+          <code>public static S get() { return Holder.INSTANCE; }</code><br>
+          The inner class Holder is only initialised (and <code>&lt;clinit&gt;</code> only runs) on the first call to <code>get()</code>.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "<code>&lt;clinit&gt;</code> is the compiler-generated static initializer. It runs all static blocks and assignments in textual order, exactly once per class, with JVM-level thread safety. This is the mechanism behind safe lazy initialisation — the Initialization-on-Demand Holder pattern exploits it to get a thread-safe singleton with zero synchronisation overhead after first use."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Deadlock risk</span>
+          If two classes' <code>&lt;clinit&gt;</code> methods reference each other (circular static init), the JVM can deadlock — thread A holds the init lock for class X waiting for Y, thread B holds the lock for Y waiting for X.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="classload" data-term="Bootstrap ClassLoader" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Bootstrap ClassLoader</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          The <strong>root loader — the one that started everything</strong>. Written in native C++, not Java. It loads the foundational JDK classes (<code>String</code>, <code>Object</code>, <code>Integer</code>…) that everything else depends on. It has no parent — it IS the top of the chain.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Because it's native, it has no Java object representation. That's why <code>String.class.getClassLoader()</code> returns <code>null</code> — null is the Java API's signal for "Bootstrap". It loads from the JVM's internal boot module path (the core <code>java.*</code> modules). You cannot subclass or replace it from Java code.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Quick test you can run</span>
+          <code>System.out.println(String.class.getClassLoader()); // null = Bootstrap</code><br>
+          <code>System.out.println(MyApp.class.getClassLoader()); // jdk.internal.loader.ClassLoaders$AppClassLoader</code>
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-classload">Class Loading</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Bootstrap ClassLoader is the root of the hierarchy, implemented in native C++. It loads core JDK classes. Calling <code>getClassLoader()</code> on a Bootstrap-loaded class returns null — that's the Java API convention for 'this loader is Bootstrap'. It cannot be accessed or replaced from Java."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Security implication</span>
+          This is why you can't inject a fake <code>java.lang.String</code> — the Bootstrap loader loads it from the JVM's internal trusted location, not your classpath. The delegation model ensures this happens before your App loader even gets a chance.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     03  MEMORY
+═══════════════════════════════════════════ -->
+<div class="cat-header" data-cat="memory">
+  <span class="cat-num">03</span>
+  <span class="cat-name">Memory Architecture</span>
+  <span class="cat-count">4 terms</span>
+</div>
+<div class="def-grid">
+
+  <div class="def-card" data-cat="memory" data-term="Compressed Class Space" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Compressed Class Space</span><span class="card-tag tag-memory">Memory</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          A <strong>contiguous block of memory in Metaspace</strong> that holds only Klass definitions. Every object on the heap has a tiny pointer into this space. "Compressed" means these pointers are 32-bit (half the size of normal 64-bit pointers) to save memory.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          The compression trick: store a 32-bit value X, then compute the real 64-bit address as <code>base + X &lt;&lt; 3</code>. This only works if all Klasses sit in one <strong>contiguous</strong> block (so the base address is fixed). Max 3 GB because 32 bits × 8-byte shift = 32 GB addressable, and 3 GB is the practical JVM limit for this space.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Real saving</span>
+          Without compression, each object would need an 8-byte Klass pointer. With compression, it's 4 bytes (packed into the Mark Word in JDK 25). 100 million objects = 400 MB saved just from pointer compression.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-memory">Memory</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Compressed Class Space is the contiguous Metaspace sub-region holding Klass structs. It uses 32-bit shifted pointers instead of 64-bit, which saves 4 bytes per heap object. The contiguity requirement is what makes the arithmetic possible — a fixed base address plus a shifted 32-bit offset equals the full 64-bit Klass address."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ When it's disabled</span>
+          If Metaspace needs to grow beyond 3 GB (very unusual), <code>UseCompressedClassPointers</code> is automatically disabled. You pay the full 8-byte pointer cost per object. Avoid this by profiling Metaspace growth.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="memory" data-term="G1GC Region" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">G1GC Heap Region</span><span class="card-tag tag-memory">Memory</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          G1GC <strong>divides the entire Java heap into equal-sized chunks</strong> called regions (1–32 MB each). At any moment, each region plays a role: Eden (new objects), Survivor (objects that survived GC), Old (long-lived objects), or Humongous (giant objects). Regions can change roles between GC cycles.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          JVM targets ~2048 total regions. With a 16 GB heap: 16000 / 2000 ≈ 8 MB per region. The flexibility of role-changing is G1's superpower: it can decide at each collection which regions are worth collecting based on how much garbage they contain — this is the "Garbage First" in its name.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Why this beats old generational GC</span>
+          Old GC (CMS, ParNew): fixed Young/Old boundaries → must scan all of Young or all of Old. G1: fluid boundaries → collect just the top 10 most garbage-dense regions → done. Predictable pause times.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-memory">Memory</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "G1 splits the heap into equal-sized regions (1–32 MB) that can dynamically change their role — Eden today, Old tomorrow. This flexibility means G1 can choose exactly which regions to collect in each cycle, always picking the most garbage-dense ones first, which is how it honours the <code>MaxGCPauseMillis</code> budget."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Tuning tip</span>
+          <code>-XX:G1HeapRegionSize=16m</code> doubles the region size, which raises the Humongous allocation threshold from 8 MB to 8 MB (50% of region). Useful if your app allocates medium-large objects to stop them going straight to Old Gen.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="memory" data-term="Code Cache" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Code Cache</span><span class="card-tag tag-memory">Memory</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          A special memory region that stores <strong>JIT-compiled native machine code</strong>. Once the JVM has compiled a hot method to assembly, it stores it here. Next time that method is called, the JVM executes the cached assembly directly — no interpretation, near-CPU-native speed.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Three sub-heaps inside the Code Cache: <strong>non-method</strong> (JVM internal stubs), <strong>profiled</strong> (C1 Level 3 code with profiling instrumentation), <strong>non-profiled</strong> (C2 Level 4 optimised code). When the Code Cache fills up, the JVM emits a warning and stops JIT-compiling — all new code runs interpreted. This is a performance cliff that's hard to recover from without restarting.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Sizing rule of thumb</span>
+          For most Spring Boot apps: 256–512 MB is adequate. Large microservice meshes or JVM apps running many lambdas/inner classes may need up to 1 GB. Monitor with <code>jcmd &lt;pid&gt; Compiler.codecache</code>.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-memory">Memory</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Code Cache stores JIT-compiled native assembly. Hot methods compiled by C2 execute directly from here — no interpreter overhead. It's separate from both heap and Metaspace. A full Code Cache silently kills JIT compilation; the JVM falls back to interpretation with no obvious error, causing a gradual performance regression that's hard to diagnose without GC/JIT logs."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Invisible failure mode</span>
+          The JVM logs a warning when the Code Cache is full, but doesn't throw an exception. If you don't have JVM logging enabled, you'll see mysterious throughput degradation and wonder why. Always set <code>-XX:ReservedCodeCacheSize=512m</code> proactively.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="memory" data-term="Non-Class Metaspace" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Non-Class Metaspace</span><span class="card-tag tag-memory">Memory</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          The <strong>larger, more flexible part of Metaspace</strong>. If Compressed Class Space stores the class blueprint (Klass), Non-Class Metaspace stores everything else that describes a class: the actual bytecode of methods, the Constant Pool table, annotations, and JIT profiling data.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Uses full 64-bit pointers (no compression needed). Does NOT need to be contiguous — the OS can give it memory scattered across different address ranges. This is why Metaspace can grow by mapping new pages almost anywhere. In a typical Spring Boot app, Non-Class Metaspace is 5–10× larger than Compressed Class Space because bytecode and constant pools dwarf the Klass structs.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Monitor separately</span>
+          <code>jcmd &lt;pid&gt; VM.metaspace</code> shows both spaces separately. If Non-Class Metaspace grows unboundedly while Class Space stays flat, it means existing classes are adding metadata (e.g., new JIT profiling data, annotations being parsed repeatedly).
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-memory">Memory</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Non-Class Metaspace holds bytecode, Constant Pools, and annotations — everything about a class except the Klass struct itself. It uses full 64-bit pointers and can be fragmented, unlike Compressed Class Space. In practice it's much larger than Class Space and is the first thing to bloat in annotation-heavy or reflection-heavy frameworks."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Framework gotcha</span>
+          Spring, Hibernate, and Jackson scan and parse annotations on every class they process. Each parse materialises annotation data in Non-Class Metaspace. In a large app with thousands of annotated classes, this can be 50–100 MB of Non-Class Metaspace just for annotation metadata.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     04  STACK
+═══════════════════════════════════════════ -->
+<div class="cat-header" data-cat="stack">
+  <span class="cat-num">04</span>
+  <span class="cat-name">Thread Stack &amp; Frames</span>
+  <span class="cat-count">5 terms</span>
+</div>
+<div class="def-grid">
+
+  <div class="def-card" data-cat="stack" data-term="JVM Stack" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">JVM Stack</span><span class="card-tag tag-stack">Stack</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Every thread gets its own <strong>private call stack</strong>. It's a pile of "what am I currently doing" cards — every method call adds a card on top, every method return removes the top card. Threads cannot see each other's stacks at all.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          The JVM Stack lives in native OS memory (not the heap). Each thread's stack is a fixed contiguous block set by <code>-Xss</code> (default 512 KB–1 MB). Stack frames are pushed/popped in O(1). No GC ever touches the stack — local variables live and die with their frame. This is why local variables are inherently thread-safe: they exist only in one thread's private address range.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 StackOverflowError</span>
+          Infinite recursion keeps pushing frames. The stack hits its <code>-Xss</code> limit → JVM throws <code>StackOverflowError</code>. Note: it's an <code>Error</code> not an <code>Exception</code> — the JVM considers this unrecoverable.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-stack">Stack</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Each thread has a private JVM Stack in native memory. Frames are pushed on method call and popped on return — O(1), no GC needed. Thread isolation means local variables in one thread's stack are physically inaccessible to other threads. This is why local variables are always thread-safe without synchronisation."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Thread pool sizing</span>
+          With 1000 threads each at 1 MB stack: 1 GB of native memory consumed just for stacks — before any heap allocation. Virtual Threads (JDK 21+) solve this: they have tiny, growable stacks starting at ~1 KB and are mounted on carrier threads only when running.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="stack" data-term="Stack Frame" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Stack Frame (Activation Record)</span><span class="card-tag tag-stack">Stack</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          A Stack Frame is <strong>all the information needed to execute one method call</strong>: the local variables, the workspace for doing calculations, and the notes for returning to the caller. One frame exists per active method call.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Three parts: <strong>Local Variable Array</strong> (fixed-size indexed storage), <strong>Operand Stack</strong> (LIFO workspace for bytecode computation), <strong>Frame Data</strong> (Constant Pool pointer, return address, exception table). The frame's exact size — max operand stack depth + local variable count — is computed at compile time and embedded in the <code>.class</code> Code attribute. No runtime sizing needed.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 The moment of method call</span>
+          <code>result = add(5, 3);</code><br>
+          1. New frame created for <code>add</code>, pushed onto stack<br>
+          2. <code>add</code> runs inside its frame<br>
+          3. Frame popped, result returned<br>
+          4. Caller's frame resumes from its return address in Frame Data
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-stack">Stack</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "A Stack Frame is created per method invocation and contains three things: the Local Variable Array for storing method params and locals, the Operand Stack as the computation scratch space, and Frame Data for return address and exception dispatch. The frame's size is determined at compile time — the JVM knows exactly how much stack to allocate before the method even starts."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Key insight for thread safety</span>
+          If a reference to an object is <em>only</em> in a Stack Frame's LVA and that object never gets assigned to a field or passed to another thread, C2's escape analysis can allocate that object on the stack itself — zero heap allocation, zero GC.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="stack" data-term="Local Variable Array" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Local Variable Array (LVA)</span><span class="card-tag tag-stack">Stack</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          A <strong>numbered list of slots inside a Stack Frame</strong> that stores all the method's local variables and parameters. Slot 0 is always <code>this</code> (for instance methods). After that: parameters in order, then local variables declared in the method body.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Each slot is 4 bytes wide. <code>long</code> and <code>double</code> are 8 bytes → they occupy <strong>two consecutive slots</strong>. Bytecode instructions reference slots by index: <code>iload_1</code> = push LVA[1] (an int) onto the Operand Stack. <code>astore_3</code> = pop a reference from Operand Stack into LVA[3]. Indices are fixed at compile time — the JVM doesn't search by name.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Example slot layout</span>
+          Instance method: <code>int sum(int a, long b)</code><br>
+          LVA[0] = <code>this</code><br>
+          LVA[1] = <code>a</code> (int, 1 slot)<br>
+          LVA[2–3] = <code>b</code> (long, 2 slots)<br>
+          LVA[4+] = any local vars declared in body
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-stack">Stack</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "LVA is the fixed-size array of slots holding all locals and parameters. Index 0 is always <code>this</code> for instance methods — static methods start params at index 0. <code>long</code>/<code>double</code> take two consecutive slots. Bytecode uses numeric slot indices, not names — variable names are debug metadata only, stripped in optimised builds."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Slot reuse</span>
+          The compiler can reuse LVA slots for variables in different scopes of the same method. If variable <code>x</code> is out of scope before variable <code>y</code> is declared, they might share the same slot. This is an optimisation to minimise frame size.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="stack" data-term="Operand Stack" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Operand Stack</span><span class="card-tag tag-stack">Stack</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Think of the Operand Stack as a <strong>scratch paper for calculations</strong>. Bytecode instructions push values onto it and pop them off to do arithmetic. Every computation — adding two numbers, calling a method, creating an object — flows through this scratch pad.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          The JVM is a <strong>stack-based virtual machine</strong> (unlike register-based VMs like Dalvik/ART or the actual CPU). Operations always work on the top of the stack. For <code>a + b</code>: push a → push b → <code>iadd</code> pops both and pushes result. The max depth of this stack is fixed at compile time (stored in the Code attribute). JIT compilation maps these stack slots to actual CPU registers for performance.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Bytecode trace for return a + b</span>
+          <code>iload_1</code>  ← push a (LVA[1]) onto OS<br>
+          <code>iload_2</code>  ← push b (LVA[2]) onto OS<br>
+          <code>iadd</code>     ← pop a and b, push (a+b)<br>
+          <code>ireturn</code>  ← pop result, return to caller
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-stack">Stack</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "The Operand Stack is the JVM's computation workspace — a LIFO stack where bytecode pushes operands, executes operations, and reads results. Java bytecode is stack-based (not register-based), making it portable across CPU architectures. JIT compilation's job is to map this abstract stack model to actual CPU registers for real performance."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ JVM vs Android</span>
+          Android's Dalvik/ART VM uses a <strong>register-based</strong> bytecode format — operations specify source and destination registers directly. This reduces the number of bytecode instructions needed but makes the format CPU-specific. Java chose stack-based for portability; Android chose register-based for mobile CPU efficiency.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="stack" data-term="Frame Data" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Frame Data (FD)</span><span class="card-tag tag-stack">Stack</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Frame Data is the <strong>bookkeeping section of a Stack Frame</strong> — the notes that tell the JVM "where do I go when this method finishes?" and "what do I do if an exception is thrown?". It connects the current frame back to the rest of the JVM.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Three things: (1) <strong>Constant Pool reference</strong> — pointer to this class's runtime CP, needed to resolve any symbolic references during execution. (2) <strong>Return address</strong> — the exact bytecode offset in the <em>calling</em> method's frame to resume at after this method returns. (3) <strong>Exception dispatch table</strong> — a per-method table mapping bytecode-offset-ranges to catch-handler start addresses.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 How exceptions find their handler</span>
+          An exception is thrown at bytecode offset 42. JVM looks up the exception table in Frame Data: does offset 42 fall in the range [10, 50) for a <code>catch (IOException e)</code> handler? If yes → jump to handler. If no → pop this frame, check the caller's exception table. Repeat until caught or stack is empty → unhandled exception.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-stack">Stack</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Frame Data is the metadata part of a Stack Frame. It holds the Constant Pool reference for runtime symbol resolution, the return address for resuming the caller, and the exception dispatch table for try-catch handling. Exception propagation literally walks up the stack, checking each frame's exception table, until a handler is found or the stack is exhausted."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Performance note</span>
+          Throwing exceptions is expensive precisely because of this table lookup + stack unwinding. Exceptions should model exceptional conditions — not control flow. Using exceptions as a loop exit condition is a common Java anti-pattern with measurable overhead.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     05  JIT
+═══════════════════════════════════════════ -->
+<div class="cat-header" data-cat="jit">
+  <span class="cat-num">05</span>
+  <span class="cat-name">JIT Compilation</span>
+  <span class="cat-count">5 terms</span>
+</div>
+<div class="def-grid">
+
+  <div class="def-card" data-cat="jit" data-term="Tiered Compilation" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Tiered Compilation</span><span class="card-tag tag-jit">JIT</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          The JVM doesn't compile everything at startup (too slow). Instead, it <strong>watches which methods get called a lot</strong>, then progressively compiles those hot methods into faster and faster native code over time. Like promoting a chef: start as dishwasher, prove yourself, get promoted to sous-chef, then head chef.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          5 levels. Methods start at Level 0 (interpreter). Two counters trigger promotion: invocation counter (i) and backedge counter (b, counts loop iterations). At ~200 invocations → Level 3 (C1 + full profiling). At ~5000+ → Level 4 (C2 aggressive). The profiling data collected at Level 3 is what gives C2 the information it needs to make speculative optimisations. Methods can also be deoptimised and re-queued if assumptions break.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Why Java "warms up"</span>
+          A brand-new JVM runs everything interpreted. After a few minutes of traffic, hot paths reach Level 4. Performance improves over time. This is why Java benchmarks must always include a warmup phase — measuring cold startup is measuring the interpreter, not the JIT.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-jit">JIT</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Tiered compilation is the JVM's progressive compilation strategy. Methods start interpreted, get C1-compiled at ~200 invocations (with profiling instrumentation), and reach C2 at ~5000+ invocations. The key insight: C1's profiling data tells C2 what <em>actually</em> happens at runtime — types, branches, call sites — enabling speculative optimisations impossible with static compilers."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Benchmarking gotcha</span>
+          If you benchmark without warmup, you're measuring the interpreter (Level 0) or early C1. Use JMH (Java Microbenchmark Harness) which handles warmup automatically. Never use <code>System.currentTimeMillis()</code> in a loop to benchmark JVM code.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="jit" data-term="C1 Compiler" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">C1 Compiler (Client Compiler)</span><span class="card-tag tag-jit">JIT</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          C1 is the <strong>fast-but-not-perfect compiler</strong>. It quickly turns bytecode into native code that runs much faster than the interpreter. At its highest level (Level 3), it also secretly <strong>watches what's happening</strong> — recording which types show up, which branches are taken — and reports this back so C2 can later do an even better job.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          C1 operates at 3 sub-levels: Level 1 (no profiling — trivial methods like getters), Level 2 (light profiling — C2 queue is backed up, pressure relief valve), Level 3 (full profiling — the standard path). Level 3 code is instrumented with trap instructions and counters that log type feedback into MethodData objects stored in Metaspace. C2 reads this MethodData to make its speculative bets.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Why Level 2 exists</span>
+          C2 is expensive and has a compilation queue. During a traffic spike, the queue might back up. Rather than leaving methods at slow Level 3, the JVM promotes some to Level 2 (light profile) as a compromise — faster than Level 3, less queue pressure on C2.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-jit">JIT</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "C1 is the quick-compile stage. It produces decent native code fast, and at Level 3 it instruments that code with profiling probes — type counters, branch statistics — stored as MethodData in Metaspace. C2 reads this MethodData to make speculative optimisations like monomorphic inlining and branch prediction tuning."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Level 1 methods stay forever</span>
+          Trivial methods (pure getters with no branches) go to Level 1 and never progress to Level 4 — there's nothing to profile and C2 won't do anything better anyway. They're already as fast as they can be.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="jit" data-term="C2 Compiler" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">C2 Compiler (Server Compiler)</span><span class="card-tag tag-jit">JIT</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          C2 is the <strong>turbo engine</strong>. After a method has been called thousands of times, C2 takes the profiling data, studies the method deeply, and produces <em>brutally optimised</em> native machine code. It can make assumptions a static compiler never could — because it knows exactly what's happened at runtime so far.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          C2 uses profiling data to make <strong>speculative optimisations</strong>: if profiling shows <code>list.add()</code> is always called on <code>ArrayList</code>, C2 inlines the ArrayList implementation directly (no virtual dispatch overhead) with a guard check. Other tricks: loop unrolling (flatten small loops into sequential instructions), null check elimination, dead code removal, scalar replacement (decompose objects into primitive fields on stack/registers). Takes longer to compile but the result is near-hand-written-C performance.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 How Java can beat C++</span>
+          A C++ compiler optimises based on static types. C2 optimises based on <em>runtime behaviour</em>. If at runtime 99% of calls go through one subclass, C2 inlines that subclass directly. The C++ compiler can't know this without profile-guided optimisation (PGO), which requires a separate profiling build step.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-jit">JIT</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "C2 is the heavy-duty optimising JIT, active after ~5000+ invocations. It uses runtime profile data for speculative optimisations: monomorphic inlining, loop unrolling, escape analysis-based stack allocation, null-check elimination. The result can outperform equivalent C++ because C2 optimises for actual runtime behaviour, not just static type information."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Profiling stops at Level 4</span>
+          Once C2 compiles a method, profiling stops. C2 bets on its compiled code being correct. If a new subtype appears or branches change distribution, those assumptions may be wrong → deoptimisation kicks in.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="jit" data-term="Escape Analysis" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Escape Analysis</span><span class="card-tag tag-jit">JIT</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          C2 tries to answer: <strong>"does this object ever leave this method?"</strong> If you create an object, use it only locally, and never pass it to another method or store it in a field — C2 knows the object "doesn't escape". It can then skip the heap allocation entirely and put it on the stack or even in CPU registers.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Three outcomes of escape analysis: (1) <strong>No escape → stack allocate</strong> (object lives and dies in the frame, zero GC cost), (2) <strong>No escape → scalar replace</strong> (decompose the object into its individual fields as local variables — no object header overhead at all), (3) <strong>Thread-local escape</strong> → object doesn't escape to other threads, so no need for lock contention checks. This eliminates GC pressure for many short-lived objects like iterators, StringBuilder in string concatenation, and temporary DTOs.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Concrete example</span>
+          <code>String result = "Hello " + name + "!";</code><br>
+          The compiler creates a <code>StringBuilder</code>. C2 escape analysis proves it doesn't escape → scalar replaces it → zero heap allocation for the StringBuilder itself. Only the final <code>String</code> goes to heap.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-jit">JIT</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Escape analysis lets C2 prove an object's lifetime is bounded within a method. If proven non-escaping, C2 can stack-allocate it (instant cleanup on return) or scalar-replace it (decompose into CPU registers — no object at all). This eliminates GC pressure for many short-lived allocations like iterators and temporary builders that look like heap objects in source code but never actually hit the heap."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ How to break it accidentally</span>
+          Passing a "local" object to a logging framework, putting it in a thread-local, or using reflection on it — any of these cause C2 to conclude the object might escape and bail out on the optimisation. Keep hot-path objects truly local.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="jit" data-term="Deoptimization" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Deoptimization</span><span class="card-tag tag-jit">JIT</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          C2 makes <em>bets</em> when it optimises ("I bet this method will always be called with an ArrayList"). If that bet turns out to be wrong at runtime, the JVM <strong>undoes the optimisation</strong>, falls back to the interpreter, re-profiles, and eventually recompiles a more cautious version. The safety net that makes speculative optimisation safe.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          C2 inserts <strong>uncommon trap</strong> instructions at every speculation point. When the trap fires (assumption violated), the JVM executes a deoptimisation sequence: reconstruct the interpreter state from the compiled frame (using the debug info C2 preserved), return to the interpreter at the right bytecode offset, increment a counter. If the same method is deoptimised repeatedly, it may get marked "not entrant" and recompiled from scratch with the new reality.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Real scenario</span>
+          Production JVM runs for hours, <code>processShape()</code> always gets <code>Circle</code> → C2 inlines Circle's logic directly. Then a <code>Square</code> request arrives → uncommon trap fires → deoptimise → re-profile → recompile with a polymorphic inline cache handling both types. The temporary slowdown is a few milliseconds, not a crash.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-jit">JIT</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Deoptimisation is the JVM's safety net for speculative compilation. When a C2 assumption — like a call site being monomorphic — is violated, an uncommon trap fires, the compiled frame is reconstructed as interpreter state, and execution continues safely in interpreted mode. The method is then re-profiled and recompiled with a more accurate model."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Detect excessive deopt</span>
+          <code>-XX:+TraceDeoptimization</code> logs every event. Frequent deoptimisation is a performance red flag — common cause is loading a new class at runtime that polymorphises a previously monomorphic call site (e.g., plugin systems, late-bound services). Also triggered by <code>ClassCastException</code> catches in tight loops.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     06  HEAP
+═══════════════════════════════════════════ -->
+<div class="cat-header" data-cat="heap">
+  <span class="cat-num">06</span>
+  <span class="cat-name">Object Allocation &amp; Heap</span>
+  <span class="cat-count">5 terms</span>
+</div>
+<div class="def-grid">
+
+  <div class="def-card" data-cat="heap" data-term="TLAB" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">TLAB — Thread-Local Allocation Buffer</span><span class="card-tag tag-heap">Heap</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Instead of every thread fighting over a shared memory pool to create objects, the JVM <strong>gives each thread its own private chunk of Eden</strong>. Each thread allocates objects in its own chunk without asking anyone. When the chunk fills up, it quietly gets a fresh one.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Allocation inside a TLAB = <strong>pointer bump</strong>: just move a pointer forward by the object's size. One machine instruction. No locks, no CAS (Compare-And-Swap). Without TLAB, every <code>new Object()</code> would need a CAS to safely advance the shared Eden top pointer, which under high thread contention serialises all allocation. TLAB eliminates this completely. TLAB is exhausted → thread requests a new one from Eden (this does require a lock, but happens rarely).
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Allocation speed reality check</span>
+          Java object allocation (with TLAB) is often <em>faster</em> than <code>malloc()</code> in C — because malloc must manage free lists and handle fragmentation. TLAB is just a pointer increment into pre-zeroed memory.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-heap">Heap</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "TLAB gives each thread a private Eden slice, making object allocation a single pointer bump — no locks, no CAS. It's why Java object creation is extremely fast for small objects. TLAB exhaustion is rare and handled by requesting a fresh chunk, which is the only point where synchronisation is needed."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ TLAB waste</span>
+          When a TLAB is exhausted but the remaining space is too small for the next object, the leftover space is wasted (filled with a dummy object to keep the heap walkable). Large objects can cause excessive TLAB waste. Objects larger than <code>-XX:TLABWasteTargetPercent</code> of TLAB size bypass TLAB and allocate directly from Eden's shared bump pointer.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="heap" data-term="Humongous Object" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Humongous Object</span><span class="card-tag tag-heap">Heap</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Any object <strong>50% or more of a G1GC Region's size</strong> is called "Humongous" and treated very differently. It skips Eden entirely, goes straight to Old Gen, needs multiple physically adjacent memory regions, and wastes any leftover space in its last region.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Humongous objects span one or more <em>contiguous</em> regions (the first is "starts-humongous", subsequent are "continues-humongous"). Because they must be contiguous and go straight to Old Gen, they: (1) bypass TLAB, (2) skip Young GC's efficient evacuation, (3) can trigger Full GC if the heap is fragmented and no contiguous block exists. One special case: <strong>primitive arrays</strong> with zero incoming references are eagerly reclaimed during Young GC without waiting for a Mixed GC.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Common production mistake</span>
+          Reading a large file or HTTP body into a <code>byte[]</code> on every request. With an 8 MB region size, any <code>byte[]</code> over 4 MB becomes Humongous. In a service handling 100 req/s, this rapidly fills Old Gen with Humongous objects → frequent Mixed GC → potential Full GC.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-heap">Heap</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Humongous objects (≥50% of region size) bypass Eden and go directly to Old Gen, requiring physically contiguous regions. This causes internal fragmentation, bypasses TLAB's fast allocation path, and can trigger Full GC when contiguous space isn't available. The fix: pool large buffers with <code>ByteBuffer.allocateDirect()</code>, or increase region size with <code>-XX:G1HeapRegionSize=32m</code> to raise the threshold."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Detection</span>
+          GC log will show <code>Humongous regions: N</code>. If this number grows, you have a Humongous allocation problem. Use async profilers (e.g., async-profiler with <code>-e alloc</code>) to find the allocation site.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="heap" data-term="Mark Word" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Mark Word (Object Header)</span><span class="card-tag tag-heap">Heap</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Every Java object starts with a <strong>64-bit (8-byte) header called the Mark Word</strong>. The JVM packs multiple pieces of information into this one field: what type of object it is, its hash code, how many GC cycles it survived, and whether it's currently locked.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood — JDK 25 (JEP 519)</span>
+          In JDK 25, the Mark Word encodes: <strong>compressed Klass pointer</strong> (replaces the old separate 32-bit field), <strong>31-bit identity hash code</strong> (lazily computed only on first <code>hashCode()</code> call), <strong>4-bit GC age</strong> (0–15), <strong>tag bits</strong> (encode lock state: unlocked / lightweight-locked / inflated), <strong>4 reserved bits</strong> (for future Project Valhalla value types). The JVM reinterprets the same bits differently depending on the lock state tag.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Lock state transitions</span>
+          Unlocked → tag = 01, Klass + hash + age in the word.<br>
+          Lightweight locked (<code>synchronized</code>, uncontended) → tag = 00, pointer to lock record on the locking thread's stack.<br>
+          Inflated (contended) → tag = 10, pointer to a native OS mutex.<br>
+          The JVM transitions between these states automatically based on contention.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-heap">Heap</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "The Mark Word is the 64-bit header field every Java object carries. It multiplexes several uses: Klass pointer (type info), identity hash code (lazy), GC age (4 bits, 0–15), and lock state (tag bits encoding unlocked, lightweight-locked, or inflated). JDK 25's JEP 519 packed the Klass pointer into the Mark Word, eliminating the separate 32-bit Klass field and saving 4 bytes per object."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Why hash code is lazy</span>
+          Computing and storing the hash code consumes 31 bits of the Mark Word. If stored eagerly, there's no room for the Klass pointer or GC age without expanding the header. Lazy storage means most objects (that never have <code>hashCode()</code> called) pay zero cost.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="heap" data-term="GC Age Bits" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">GC Age Bits</span><span class="card-tag tag-heap">Heap</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          A <strong>counter embedded in every object's header</strong> that tracks how many garbage collections the object has survived. Every time it survives a Young GC without being collected, the counter ticks up. When it hits 15, the JVM says "okay, you've clearly been around for a while" and moves the object permanently to Old Gen.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          4 bits → values 0–15. Each Young GC "evacuation" (copying surviving objects to To-Survivor) increments the age. The threshold (default 15) is <em>adaptive</em> — the JVM may lower it dynamically if Survivor regions are filling up (to avoid Survivor overflow causing premature mass promotion). <code>-XX:MaxTenuringThreshold</code> sets the hard cap but the JVM may promote earlier.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Generational hypothesis</span>
+          The entire design assumes: <strong>most objects die young</strong>. Short-lived objects (iterators, temp strings, request-scoped objects) die in Eden before even needing an age. Objects that survive several GCs are probably long-lived (caches, connection pools, singletons) → they <em>belong</em> in Old Gen.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-heap">Heap</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "GC Age is a 4-bit counter in the object header that increments with each Young GC survived. At the tenuring threshold (default 15, adaptively lowered under Survivor pressure), the object promotes to Old Gen. This implements the generational hypothesis: objects that survive many GC cycles are likely long-lived and belong in Old Gen where they're collected less frequently."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Premature promotion warning sign</span>
+          If you see many objects age 1–2 being promoted, your Survivor regions are too small. The JVM is force-promoting because it can't fit all survivors. Fix: increase heap size, or tune <code>-XX:SurvivorRatio</code> to give more space to Survivor regions.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="heap" data-term="Compact Object Headers" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Compact Object Headers (JEP 519)</span><span class="card-tag tag-heap">Heap</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          A JDK 25 change that <strong>shrinks every Java object's overhead from 12–16 bytes down to 8 bytes</strong>. By being cleverer about packing information into the header, every single object in the JVM just got a bit smaller — which means your app can fit more objects in the same heap.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Legacy header: 64-bit Mark Word + 32-bit Klass pointer = 96 bits (12 bytes) minimum, padded to 128 bits (16 bytes) for 8-byte alignment. JEP 519: packs the Klass pointer directly into the 64-bit Mark Word — one field instead of two. This required carefully rearranging the bit layout to fit Klass ptr + hash + age + lock state + 4 reserved bits all into 64 bits. The 4 reserved bits are explicitly saved for Project Valhalla's Value Types.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Scale impact</span>
+          100 million objects × 4 bytes saved = <strong>400 MB less heap</strong>. Better CPU cache utilisation because objects are denser. Reduced GC pressure because more objects fit per cache line, fewer cache misses during GC tracing.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-heap">Heap</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "JEP 519 in JDK 25 compresses every object header from 96/128 bits to 64 bits by subsuming the Klass pointer into the Mark Word. The savings compound at scale — 400 MB+ on an app with 100 million objects. Better memory density also improves CPU cache efficiency during GC tracing. The 4 reserved bits in the new layout are forward-looking capacity for Project Valhalla."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Observability impact</span>
+          Tools that parse raw object headers (JVM TI agents, some profilers, memory analysers) need updating for JDK 25's new header layout. If your JVM agent was built against JDK 21 header assumptions, it may misread headers silently.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     07 + 08  GC
+═══════════════════════════════════════════ -->
+<div class="cat-header" data-cat="gc">
+  <span class="cat-num">07–08</span>
+  <span class="cat-name">GC &amp; Cross-Region Tracking</span>
+  <span class="cat-count">10 terms</span>
+</div>
+<div class="def-grid">
+
+  <div class="def-card" data-cat="gc" data-term="Write Barrier" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Write Barrier</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Every time you write a reference (e.g., <code>oldObj.field = youngObj</code>), the JVM quietly runs a tiny piece of hidden code <em>around</em> that assignment. This hidden code <strong>tells the GC about the change</strong> so GC bookkeeping stays accurate. You never see it — the JIT injects it automatically.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          G1GC uses <strong>two</strong> write barriers: <strong>pre-write (SATB)</strong> — before overwriting a reference, log the old value to an SATB queue (so concurrent marking doesn't miss objects that were referenced before the change). <strong>Post-write (Card Table)</strong> — after the write, mark the 512-byte "card" covering the old object's address as dirty in the Card Table (so the RSet can be updated asynchronously).
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 The hidden cost of mutation</span>
+          Write-heavy code (updating object graphs in tight loops) pays ~3–5 extra instructions per reference write. Immutable objects pay zero write barrier cost after construction. This is a non-trivial reason functional/immutable styles can outperform mutable ones in GC-heavy workloads.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Write barriers are JIT-injected code that runs around every reference field write. G1 uses two: a pre-write SATB barrier (logs the old reference value to preserve marking correctness during concurrent GC), and a post-write Card Table barrier (marks the region's card dirty for async RSet update). They're the mechanism that allows concurrent GC to run while your application mutates the heap."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ ZGC's approach</span>
+          ZGC uses <strong>load barriers</strong> instead of write barriers — code runs when a reference is <em>read</em>. This enables concurrent relocation (moving objects while the app runs) but adds a tiny overhead to every reference read. Different trade-off from G1's write-barrier approach.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="gc" data-term="Card Table" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Card Table</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Imagine a map of the entire Java heap where each square on the map represents 512 bytes of actual heap. When an Old Gen object's reference field changes, the JVM <strong>marks that square on the map as "dirty"</strong>. Background threads later come and process all dirty squares to update the proper cross-region tracking table.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Physically it's a byte array — one byte per 512-byte "card" of heap. For a 16 GB heap: 16 GB / 512 = 32 million cards = 32 MB of Card Table (very space-efficient). Marking a card dirty = writing 0 to its byte (one store instruction). Refinement threads scan the card table in chunks, find dirty (0) bytes, resolve the exact pointer inside that 512-byte card, and update the target region's RSet. Cards are then marked clean again.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Two-level design</span>
+          Card Table is imprecise (512-byte granularity) — a dirty card means "some reference in this 512-byte area changed". Refinement threads then do precise work to find the exact pointer. This two-level design lets write barriers be incredibly cheap (one store) while keeping RSet updates accurate.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "The Card Table is a coarse-grained index of the heap at 512-byte granularity. Post-write barriers mark cards dirty with a single store. Background refinement threads process dirty cards to precisely update RSets. This two-level indirection — cheap coarse marking, expensive precise updating done asynchronously — keeps write barrier overhead minimal while maintaining GC correctness."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Card Table thrashing</span>
+          If the same card is dirtied repeatedly (a frequently-mutated Old Gen object), refinement threads have extra work. In extreme cases, concurrent refinement can't keep up → STW pause to drain dirty cards. Monitor with <code>-Xlog:gc+remset=trace</code>.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="gc" data-term="Remembered Set" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Remembered Set (RSet)</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Every G1GC region keeps a <strong>notebook listing which other regions have references pointing into it</strong>. When it's time to collect a region, instead of scanning the entire 100 GB heap to find all references pointing in, the GC just reads this small notebook.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Physically: a per-region hash table. Key = the address of the external region containing the reference. Value = the Card Table index (which 512-byte card within that region). At Young GC time, GC scans the RSets of Young regions to find all incoming Old→Young pointers. These become additional GC roots — objects pointed to from Old Gen are treated as live. Without RSets, the GC would have to scan all of Old Gen to find these pointers, making Young GC proportional to total heap size instead of just Young Gen size.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 The O(1) miracle</span>
+          With RSets: Young GC scans ~few KB of RSet data regardless of Old Gen size.<br>
+          Without RSets: Young GC scans the entire Old Gen (could be 50+ GB).<br>
+          This is the core reason G1GC can have predictable Young GC pause times independent of heap size.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "RSets are per-region hash maps recording incoming cross-region references. At Young GC time, GC scans only the RSets of Young regions — not all of Old Gen. This makes Young GC pause time proportional to Young Gen size, not total heap size. It's the key engineering insight that lets G1GC work at multi-hundred-GB heap sizes."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ RSet overhead</span>
+          Every region has an RSet. Old Gen regions with many incoming references (e.g., a shared cache referenced by many other objects) build large RSets. Large RSets = more refinement thread work + more memory. Monitor total RSet memory with <code>-XX:+PrintGCDetails</code> → "Remembered Set" line.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="gc" data-term="Young GC" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Young GC (Minor Collection)</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          When Eden fills up, the JVM <strong>pauses everything and cleans up Eden</strong>. It checks which objects in Eden are still needed (reachable), copies them to a Survivor region, and simply discards everything else by marking the entire Eden region as empty. Fast because most objects are garbage.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Stop-The-World — all application threads pause. GC roots (stack frames, static fields) are traced. RSets provide additional roots (Old→Young pointers). Live objects are <strong>evacuated</strong> (copied) to To-Survivor regions, incrementing their age. Objects age 15+ or Survivor overflow → promoted to Old Region. Eden + From-Survivor regions are atomically reclaimed. The entire Young Gen is compacted as a side effect of copying. Typical duration: 5–50 ms.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Why it's so fast</span>
+          The generational hypothesis: 90–98% of Eden objects are already dead at collection time. The GC only copies the ~2–10% survivors. Compare to Full GC which must scan 100% of heap.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Young GC is a STW evacuation — it copies live Young Gen objects to Survivor regions and promotes age-threshold objects to Old Gen. It's fast because the generational hypothesis holds: 90%+ of Eden objects are dead. RSets guide GC to Old→Young pointers without scanning all of Old Gen. Compaction happens automatically as a side effect of copying."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Long Young GC pause</span>
+          Young GC should be fast (5–50 ms). If it's taking hundreds of ms, suspect: very large Young Gen (more to scan), huge survivor space overflow (mass promotion), or RSets that are too large (many dirty cards to process). Check <code>-Xlog:gc*</code> for breakdown.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="gc" data-term="IHOP" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">IHOP — Initiating Heap Occupancy %</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          IHOP is the <strong>"start marking now" trigger</strong>. G1GC watches Old Gen filling up and at some point says "if I don't start scanning the heap for live objects now, Old Gen will fill up completely before I finish — and that means Full GC". IHOP is the threshold (as a percentage of heap) that triggers this early warning scan.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Default ~45% of heap. But G1 uses <strong>Adaptive IHOP</strong> — it measures actual allocation rate and marking throughput, then calculates: "given how fast we're allocating and how long marking takes, we need to start marking when Old Gen is at X%". If allocation rate suddenly spikes, IHOP moves earlier. This is a <em>prediction engine</em> inside the JVM, continuously recalibrating.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 What happens if IHOP fires too late</span>
+          Old Gen fills up before marking finishes → G1 can't reclaim space fast enough → Mixed GC can't keep up → Full GC kicks in. This is the cascade you're always trying to prevent.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "IHOP is G1's trigger for concurrent marking. Adaptive IHOP continuously models allocation rate and marking speed to calculate the right moment to start — so marking finishes before Old Gen exhausts. If IHOP fires too late, the GC races against allocation and loses → Full GC. Tuning IHOP is about giving the GC enough runway to finish marking safely."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Disabling adaptive IHOP</span>
+          <code>-XX:InitiatingHeapOccupancyPercent=35</code> disables adaptive IHOP and fixes the threshold. Useful for workloads with extremely spiky allocation where adaptive IHOP's predictions are inaccurate. Lower threshold = more frequent marking cycles but more headroom.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="gc" data-term="SATB" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">SATB — Snapshot-At-The-Beginning</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          G1GC marks live objects while your app keeps running. This creates a problem: your app is constantly changing references while GC is trying to trace them. SATB solves this by saying: <strong>"I'll mark everything that was reachable at the moment I started — even if your app later throws those references away"</strong>. It takes a logical snapshot and stays loyal to it.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          The pre-write barrier logs the <em>old</em> reference value before every reference field is overwritten during concurrent marking. These old values go into per-thread SATB queues. GC threads drain these queues and treat any logged reference as live (even if the app no longer holds it). This guarantees: <strong>no live object at snapshot-time is ever missed</strong>. Cost: objects that die after the snapshot are treated as live until next cycle — "float garbage".
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Float garbage explained simply</span>
+          At marking start: object A is reachable. Your app deletes the reference to A mid-marking. SATB logged A as "was referenced" → GC keeps A alive. A gets collected in the <em>next</em> cycle. This one-cycle delay is called float garbage. Normal, expected, not a leak.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "SATB is G1's invariant for concurrent marking correctness. By logging the pre-write value of every reference change, G1 guarantees it never loses a live object mid-marking. The trade-off: objects that become garbage after the marking snapshot aren't collected until the next cycle — this is float garbage. It's a deliberate design choice: prefer missing some garbage (float) over ever collecting a live object."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Float garbage + heap pressure</span>
+          In a workload with high churn (lots of objects dying during concurrent marking), float garbage can temporarily inflate live set size. If your heap is tight, this extra uncollected garbage can push Old Gen past IHOP and trigger an unexpected marking cycle. Size the heap with this float in mind.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="gc" data-term="Mixed GC" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Mixed GC</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          After concurrent marking finishes, G1 knows which Old Gen regions are mostly garbage. Mixed GC is like <strong>a targeted clean-up: it collects Young Gen as usual, plus the most garbage-filled Old Gen regions</strong>. It's incremental — it chips away at Old Gen over multiple cycles rather than doing it all at once.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          G1 builds a sorted list of Old Gen regions by garbage ratio (most garbage first — hence "Garbage First"). It picks regions to collect until the estimated collection time would breach <code>-XX:MaxGCPauseMillis</code>, then stops. Remaining dirty Old regions are collected in subsequent Mixed GC cycles (up to <code>-XX:G1MixedGCCountTarget</code> = 8 by default). This is the key insight: G1 never tries to collect <em>all</em> of Old Gen at once — it takes bite-sized chunks within its pause budget.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Why not just Full GC?</span>
+          Full GC = collect all of Old Gen at once, serially, taking seconds. Mixed GC = collect the top 10% most garbage-dense Old regions, STW for 50–100 ms. Repeat 8× over the next few seconds to chip away at Old Gen. Same total work, but broken into tiny pauses that fit within the latency budget.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Mixed GC is G1's incremental Old Gen reclamation strategy. It collects all Young regions plus a pause-budget-constrained subset of Old regions — always prioritising the highest-garbage ones. It spreads Old Gen collection over multiple cycles, keeping each pause within <code>MaxGCPauseMillis</code>. This is the 'Garbage First' in G1GC — maximise garbage collected per millisecond of STW pause."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ If Mixed GC can't keep up</span>
+          Allocation rate exceeds Mixed GC's reclamation rate → Old Gen fills up → Full GC. Root causes: allocation rate too high, heap too small, too many long-lived objects being created (memory leak pattern), or Humongous objects overwhelming Old Gen.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="gc" data-term="Remark Phase" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Remark Phase (STW)</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          After concurrent marking finishes its main scan (while your app ran), there's a backlog of reference changes logged in SATB queues that haven't been processed yet. Remark is a <strong>short pause where the app stops so GC can process that backlog cleanly</strong> and finalise which objects are live.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Stop-The-World. GC drains all per-thread SATB queues (the pre-write barrier logs accumulated during concurrent marking). Then processes weak references (SoftReference, WeakReference, PhantomReference) — deciding which to keep and which to clear based on heap pressure. After Remark, the live object set is precisely known. Typically very short: 1–10 ms, because concurrent marking did 95%+ of the work already.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 SoftReference clearing</span>
+          Remark is when <code>SoftReference.get()</code> can start returning <code>null</code>. The JVM decides to clear SoftReferences during Remark if heap pressure is high (it uses a heuristic based on time since last GC and free heap ratio). SoftReferences are meant to be cleared before OOM, not on a schedule.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Remark is a short STW phase that closes out concurrent marking. It drains the SATB queues that accumulated during concurrent marking, finalising the live object set. It also processes all reference types — soft, weak, phantom. Short because concurrent marking did the heavy lifting. After Remark, G1 knows exactly what's alive and can calculate Mixed GC collection sets."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Long Remark pauses</span>
+          If Remark takes longer than expected, suspect: large SATB queue backlog (application is mutating references very rapidly during marking, outpacing queue draining), or many WeakReferences/finalizers to process. Tune with <code>-XX:G1SATBBufferSize</code>.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="gc" data-term="Object Promotion" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Object Promotion</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          When an object survives enough Young GC cycles (default: 15), the JVM decides it's probably going to stick around for a long time and <strong>"promotes" it to Old Gen</strong> — the part of the heap that gets collected much less often. It's like graduating from intern to permanent staff.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          Promotion happens during Young GC evacuation. If GC Age ≥ MaxTenuringThreshold (adaptive, default 15) → copy object to an Old Region instead of Survivor. If Survivor regions are full (can't fit all live Eden objects) → mass promotion of all surviving objects regardless of age. This Survivor overflow is called <strong>premature promotion</strong> and is the main cause of Old Gen growing faster than expected.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 The right objects to promote</span>
+          Good promotions: connection pools, caches, singletons — they're genuinely long-lived.<br>
+          Bad promotions: HTTP session objects that die after a few seconds, but survived 15 GCs before being released. Old Gen then fills with these "should be short-lived" objects → more Mixed GC → worse latency.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Promotion moves objects to Old Gen when they exceed the tenuring threshold or when Survivor space overflows. Premature promotion — caused by undersized Survivor regions — is a common performance problem: medium-lived objects flood Old Gen, triggering more frequent Mixed GC cycles. Diagnosing it requires <code>-XX:+PrintTenuringDistribution</code> to see the age histogram of survivors."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Survivor sizing</span>
+          <code>-XX:SurvivorRatio=8</code> means each Survivor region is 1/(8+2) = 10% of Eden size. If your app has lots of medium-lived objects (ages 3–10), you may need smaller SurvivorRatio (larger Survivor regions) to avoid premature promotion.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+  <div class="def-card" data-cat="gc" data-term="Full GC" onclick="flip(this)">
+    <div class="card-front">
+      <div class="card-top"><span class="card-term">Full GC — The Last Resort</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="simple-box"><span class="simple-label">🟡 What it is — plain English</span>
+          Full GC is the JVM's <strong>emergency mode</strong>. Everything stops. The JVM serially scans and compacts the <em>entire heap</em> — Young Gen, Survivor, Old Gen, Humongous — all in one go. It can take seconds. It means Mixed GC failed to keep up. In production, Full GC is a fire alarm, not normal operation.
+        </div>
+        <div class="deep-box"><span class="deep-label">⚙️ Under the hood</span>
+          G1's Full GC uses a <strong>serial, single-threaded mark-compact algorithm</strong> (improved to multi-threaded in JDK 10+). It: marks all live objects starting from all roots, computes new addresses (compaction plan), updates all references to new addresses, physically moves objects to compacted positions. The heap becomes fully compacted and fragmentation-free after a Full GC — but you paid seconds of pause time to get there.
+        </div>
+        <div class="eg-box"><span class="eg-label">🔗 Most common root causes</span>
+          1. Memory leak (live set grows unboundedly) — objects accumulate in caches or collections that never release entries.<br>
+          2. Heap too small for workload — steady-state live set is too close to heap limit.<br>
+          3. Humongous object explosion — large byte[] allocations exhaust contiguous memory.<br>
+          4. Allocation rate far exceeds GC throughput — need a bigger or faster GC.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip → say it in an interview</div>
+    </div>
+    <div class="card-back">
+      <div class="card-top"><span class="card-term">Say it in an interview</span><span class="card-tag tag-gc">GC</span></div>
+      <div class="card-body">
+        <div class="answer-box"><span class="answer-label">✅ Strong answer</span>
+          "Full GC is G1's last resort — a STW, stop-everything compaction of the entire heap. It means Mixed GC failed: allocation rate exceeded reclamation rate, or contiguous memory wasn't available for a Humongous object. In production it should be essentially never. The right response isn't tuning GC flags — it's finding and fixing the root cause: a memory leak, undersized heap, or Humongous allocation anti-pattern."
+        </div>
+        <div class="watch-box"><span class="watch-label">⚠️ Detecting it</span>
+          GC log line: <code>[GC pause (G1 Compaction Pause) (young) (initial-mark)</code> → Mixed GC. <code>[Full GC (Allocation Failure)</code> → emergency Full GC. Alert on any Full GC in production. Investigate with heap dumps (<code>jmap -dump:format=b</code>) to find what's holding the live set large.
+        </div>
+      </div>
+      <div class="flip-hint">click to flip back</div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<div class="progress-bar-wrap">
+  <span class="pb-label">Reviewed</span>
+  <div class="pb-track"><div class="pb-fill" id="pb-fill"></div></div>
+  <span class="pb-count" id="pb-count">0 / 0</span>
+  <button class="pb-reset" onclick="resetAll()">↺ Reset</button>
+</div>
+
+<script>
+function flip(card) {
+  card.classList.toggle('flipped');
+  updateProgress();
+}
+function updateProgress() {
+  const visible = [...document.querySelectorAll('.def-card')].filter(c => !c.classList.contains('hidden'));
+  const done = visible.filter(c => c.classList.contains('flipped')).length;
+  const total = visible.length;
+  document.getElementById('pb-count').textContent = done + ' / ' + total;
+  document.getElementById('pb-fill').style.width = total ? (done/total*100)+'%' : '0%';
+}
+function filterCards(cat, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.def-card').forEach(c => {
+    c.classList.toggle('hidden', cat !== 'all' && c.dataset.cat !== cat);
+  });
+  document.querySelectorAll('.cat-header').forEach(h => {
+    h.style.display = (cat === 'all' || h.dataset.cat === cat || h.dataset.cat === 'gc') ? '' : 'none';
+    if(cat !== 'all' && cat !== 'gc' && !h.dataset.cat) h.style.display='none';
+  });
+  updateProgress();
+}
+function searchCards(q) {
+  q = q.toLowerCase().trim();
+  document.querySelectorAll('.def-card').forEach(c => {
+    c.classList.toggle('hidden', q && !c.dataset.term.toLowerCase().includes(q) && !c.textContent.toLowerCase().includes(q));
+  });
+  updateProgress();
+}
+function resetAll() {
+  document.querySelectorAll('.def-card').forEach(c => c.classList.remove('flipped'));
+  updateProgress();
+}
+updateProgress();
+</script>
+</body>
+</html>

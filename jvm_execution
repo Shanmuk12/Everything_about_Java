@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JVM Deep Internals — Part 2 · FAANG Interview Reference</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--border:#30363d;
+  --text:#e6edf3;--text2:#8b949e;--text3:#6e7781;
+  --ca:#58a6ff;--cab:#0d2240;--caa:#1f6feb;
+  --la:#3fb950;--lab:#0d2a1a;--laa:#238636;
+  --ma:#e3b341;--mab:#2d1f00;--maa:#9e6a03;
+  --ea:#bc8cff;--eab:#1d1035;--eaa:#6e40c9;
+  --na:#f47067;--nab:#2d0f0f;--naa:#b62324;
+  --ta:#79c0ff;--tab:#0a1929;--taa:#1158a7;
+  --sa:#56d364;--sab:#0a2210;--saa:#1a7f37;
+  --pa:#ff9e64;--pab:#2a1500;--paa:#aa5500;
+  --ra:#f0883e;--rab:#1f1000;--raa:#8b4500;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:baseline;gap:16px;position:sticky;top:0;z-index:100}
+.header h1{font-size:16px;font-weight:600;white-space:nowrap}
+.header p{font-size:11px;color:var(--text2)}
+.legend{display:flex;gap:10px;padding:6px 20px;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);cursor:default}
+.ld{width:8px;height:8px;border-radius:2px}
+.main{display:flex;height:calc(100vh - 64px)}
+.diagram-area{flex:1;overflow-y:auto;padding:16px 20px;min-width:0}
+.info-panel{width:370px;border-left:1px solid var(--border);background:var(--bg2);overflow-y:auto;flex-shrink:0}
+
+.stage{border-radius:8px;padding:12px;margin-bottom:6px}
+.st{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.st::after{content:'';flex:1;height:1px;background:currentColor;opacity:0.15}
+
+.s6{background:var(--tab);border:1px solid var(--taa)}.s6 .st{color:var(--ta)}
+.s7{background:var(--sab);border:1px solid var(--saa)}.s7 .st{color:var(--sa)}
+.s8{background:var(--pab);border:1px solid var(--paa)}.s8 .st{color:var(--pa)}
+.s9{background:var(--rab);border:1px solid var(--raa)}.s9 .st{color:var(--ra)}
+.s10{background:#1a0a2e;border:1px solid #5a189a}.s10 .st{color:#c77dff}
+.s11{background:#0a1a1a;border:1px solid #1a6b6b}.s11 .st{color:#4cc9f0}
+/* Stage 12 & 13 Styles */
+.s12{background:#0a1f2e;border:1px solid #1a6b9c}.s12 .st{color:#38bdf8}
+.s12 .c{border-color:rgba(56,189,248,0.18)}.s12 .c:hover{border-color:rgba(56,189,248,0.45)}.s12 .c.active{outline-color:#38bdf8}.s12 .cl{color:#38bdf8}.s12 .ctag{background:rgba(56,189,248,0.12);color:#38bdf8}
+
+.s13{background:#2e0a1f;border:1px solid #9c1a56}.s13 .st{color:#f472b6}
+.s13 .c{border-color:rgba(244,114,182,0.18)}.s13 .c:hover{border-color:rgba(244,114,182,0.45)}.s13 .c.active{outline-color:#f472b6}.s13 .cl{color:#f472b6}.s13 .ctag{background:rgba(244,114,182,0.12);color:#f472b6}
+
+.row{display:flex;gap:6px;align-items:stretch;flex-wrap:wrap}
+.row+.row{margin-top:6px}
+.col{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+
+.c{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:8px 10px;cursor:pointer;transition:all 0.12s;flex:1;min-width:100px}
+.c:hover{background:rgba(255,255,255,0.08);transform:translateY(-1px)}
+.c.active{outline:2px solid}
+.cl{font-size:11px;font-weight:600;margin-bottom:1px}
+.cd{font-size:9px;color:var(--text2);line-height:1.4}
+.ctag{font-size:8px;padding:1px 4px;border-radius:2px;margin-bottom:3px;display:inline-block;font-weight:600}
+
+.s6 .c{border-color:rgba(121,192,255,0.18)}.s6 .c:hover{border-color:rgba(121,192,255,0.45)}.s6 .c.active{outline-color:var(--ta)}.s6 .cl{color:var(--ta)}.s6 .ctag{background:rgba(121,192,255,0.12);color:var(--ta)}
+.s7 .c{border-color:rgba(86,211,100,0.18)}.s7 .c:hover{border-color:rgba(86,211,100,0.45)}.s7 .c.active{outline-color:var(--sa)}.s7 .cl{color:var(--sa)}.s7 .ctag{background:rgba(86,211,100,0.12);color:var(--sa)}
+.s8 .c{border-color:rgba(255,158,100,0.18)}.s8 .c:hover{border-color:rgba(255,158,100,0.45)}.s8 .c.active{outline-color:var(--pa)}.s8 .cl{color:var(--pa)}.s8 .ctag{background:rgba(255,158,100,0.12);color:var(--pa)}
+.s9 .c{border-color:rgba(240,136,62,0.18)}.s9 .c:hover{border-color:rgba(240,136,62,0.45)}.s9 .c.active{outline-color:var(--ra)}.s9 .cl{color:var(--ra)}.s9 .ctag{background:rgba(240,136,62,0.12);color:var(--ra)}
+.s10 .c{border-color:rgba(199,125,255,0.18)}.s10 .c:hover{border-color:rgba(199,125,255,0.45)}.s10 .c.active{outline-color:#c77dff}.s10 .cl{color:#c77dff}.s10 .ctag{background:rgba(199,125,255,0.12);color:#c77dff}
+.s11 .c{border-color:rgba(76,201,240,0.18)}.s11 .c:hover{border-color:rgba(76,201,240,0.45)}.s11 .c.active{outline-color:#4cc9f0}.s11 .cl{color:#4cc9f0}.s11 .ctag{background:rgba(76,201,240,0.12);color:#4cc9f0}
+
+.arrow{text-align:center;padding:2px 0;font-size:13px;color:var(--text3);letter-spacing:2px}
+.mzone{background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:8px;flex:1}
+.mzt{font-size:8px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:6px;font-weight:600}
+
+/* lock inflation visual */
+.lock-flow{display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-top:5px}
+.ls{font-size:8px;padding:2px 5px;border-radius:3px;font-weight:600}
+.la2{font-size:8px;color:var(--text3)}
+
+/* bit layout visual */
+.bits{display:flex;gap:1px;margin:5px 0;font-family:monospace}
+.bit{font-size:8px;text-align:center;padding:3px 0;border-radius:2px;min-width:0;flex:1}
+
+/* info panel */
+.panel-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:12px;padding:24px;text-align:center;gap:8px}
+.pe-icon{font-size:28px;opacity:0.3}
+.pc{padding:18px}
+.pbadge{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:2px 7px;border-radius:3px;margin-bottom:8px;display:inline-block}
+.ptitle{font-size:15px;font-weight:600;margin-bottom:10px;line-height:1.3}
+.pdef{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:14px}
+.sh{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:6px;margin-top:14px}
+.kp{font-size:11px;color:var(--text2);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);line-height:1.5;display:flex;gap:6px}
+.kp::before{content:'›';color:var(--text3);flex-shrink:0}
+.code{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:7px 9px;font-family:'Consolas','Monaco',monospace;font-size:10.5px;color:var(--ta);margin:8px 0;line-height:1.7;white-space:pre-wrap}
+.tip{background:rgba(227,179,65,0.07);border:1px solid rgba(227,179,65,0.22);border-radius:5px;padding:9px 11px;margin-top:10px}
+.tiph{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--ma);margin-bottom:5px;letter-spacing:0.08em}
+.tipt{font-size:11px;color:var(--text2);line-height:1.5}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ JVM Deep Internals — Part 2</h1>
+  <p>JMM · Object Layout · Lock Inflation · References · Class Loading · Metaspace · Execution</p>
+</div>
+<div class="legend">
+  <div class="li"><div class="ld" style="background:#1158a7"></div>6 · Java Memory Model</div>
+  <div class="li"><div class="ld" style="background:#1a7f37"></div>7 · Object Layout & Locking</div>
+  <div class="li"><div class="ld" style="background:#aa5500"></div>8 · Reference Types</div>
+  <div class="li"><div class="ld" style="background:#8b4500"></div>9 · Virtual Dispatch & Lambda</div>
+  <div class="li"><div class="ld" style="background:#5a189a"></div>10 · String Pool & Special Areas</div>
+  <div class="li"><div class="ld" style="background:#1a6b6b"></div>11 · JVM Startup & Tooling</div>
+  <div class="li"><div class="ld" style="background:#1a6b9c"></div>12 · Class Loading & Metaspace</div>
+  <div class="li"><div class="ld" style="background:#9c1a56"></div>13 · Allocation & Execution</div>
+</div>
+
+<div class="main">
+<div class="diagram-area">
+
+<div class="stage s6">
+  <div class="st">Stage 6 — Java Memory Model (JMM)</div>
+  <div class="row">
+    <div class="c" onclick="show('jmm-overview')">
+      <div class="ctag">JSR-133</div>
+      <div class="cl">JMM Overview</div>
+      <div class="cd">Defines visibility & ordering rules across threads · Happens-before is the core primitive</div>
+    </div>
+    <div class="c" onclick="show('happens-before')">
+      <div class="ctag">ordering</div>
+      <div class="cl">Happens-Before (HB)</div>
+      <div class="cd">8 rules: unlock→lock · volatile write→read · Thread.start · Thread.join · etc.</div>
+    </div>
+    <div class="c" onclick="show('volatile')">
+      <div class="ctag">keyword</div>
+      <div class="cl">volatile</div>
+      <div class="cd">Visibility guarantee · MFENCE barrier · No compound atomicity · Prevents reordering</div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="c" onclick="show('synchronized-jmm')">
+      <div class="ctag">monitor</div>
+      <div class="cl">synchronized</div>
+      <div class="cd">Mutual exclusion + full memory barrier on entry/exit · Establishes HB between unlock and next lock</div>
+    </div>
+    <div class="c" onclick="show('final-jmm')">
+      <div class="ctag">safe pub</div>
+      <div class="cl">final fields</div>
+      <div class="cd">JMM guarantees: after constructor completes, final fields visible to all threads without sync</div>
+    </div>
+    <div class="c" onclick="show('cpu-reorder')">
+      <div class="ctag">hardware</div>
+      <div class="cl">CPU Reordering & Visibility</div>
+      <div class="cd">Store buffers · Invalidation queues · TSO model · Why JMM is needed at all</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow">↓ object lives in heap — what does it look like in memory?</div>
+
+<div class="stage s7">
+  <div class="st">Stage 7 — Object Memory Layout & Monitor / Lock Inflation</div>
+  <div class="row">
+    <div class="c" onclick="show('object-header')">
+      <div class="ctag">12-16 bytes</div>
+      <div class="cl">Object Header</div>
+      <div class="cd">Mark Word (8 bytes) + Klass Pointer (4–8 bytes) + optional array length · Before any fields</div>
+    </div>
+    <div class="c" onclick="show('mark-word')">
+      <div class="ctag">64-bit</div>
+      <div class="cl">Mark Word Layout</div>
+      <div class="cd">Lock bits [2] · GC age [4] · Identity hashcode [31] · Biased thread ID · Forward pointer</div>
+    </div>
+    <div class="c" onclick="show('compressed-oops')">
+      <div class="ctag">-XX:+UseCompressedOops</div>
+      <div class="cl">Compressed OOPs</div>
+      <div class="cd">32-bit object pointers on 64-bit JVM · Heap &lt; 32GB → 4-byte refs · Saves 30–40% memory</div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="c" onclick="show('lock-unlocked')">
+      <div class="cl">① Unlocked</div>
+      <div class="cd">Mark word stores identity hashcode + GC age. Lock bits = 01</div>
+    </div>
+    <div style="display:flex;align-items:center;font-size:12px;color:var(--sa)">→</div>
+    <div class="c" onclick="show('lock-biased')">
+      <div class="cl">② Biased Lock</div>
+      <div class="cd">Thread ID in mark word. No CAS on re-entry. Revoke on contention. Lock bits = 101</div>
+    </div>
+    <div style="display:flex;align-items:center;font-size:12px;color:var(--sa)">→</div>
+    <div class="c" onclick="show('lock-thin')">
+      <div class="cl">③ Thin Lock (Lightweight)</div>
+      <div class="cd">CAS swap of stack pointer into mark word. Spin retry. Lock bits = 00</div>
+    </div>
+    <div style="display:flex;align-items:center;font-size:12px;color:var(--sa)">→</div>
+    <div class="c" onclick="show('lock-fat')">
+      <div class="cl">④ Fat Lock (Inflated)</div>
+      <div class="cd">OS mutex (futex). Pointer to ObjectMonitor. Blocking wait queue. Lock bits = 10</div>
+    </div>
+  </div>
+  <div style="margin-top:6px">
+    <div class="lock-flow">
+      <div class="ls" style="background:rgba(86,211,100,0.1);color:var(--sa)">No contention → Biased</div>
+      <div class="la2">→ first contention →</div>
+      <div class="ls" style="background:rgba(86,211,100,0.15);color:var(--sa)">Revoke → Thin Lock</div>
+      <div class="la2">→ contention persists →</div>
+      <div class="ls" style="background:rgba(255,158,100,0.15);color:var(--pa)">Inflate → Fat Lock</div>
+      <div class="la2">→ unlock + no waiters →</div>
+      <div class="ls" style="background:rgba(86,211,100,0.1);color:var(--sa)">Deflate possible</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow">↓ objects may be weakly or softly reachable</div>
+
+<div class="stage s8">
+  <div class="st">Stage 8 — Reference Types, Finalization &amp; Off-Heap</div>
+  <div class="row">
+    <div class="c" onclick="show('strong-ref')">
+      <div class="ctag">default</div>
+      <div class="cl">Strong Reference</div>
+      <div class="cd">Normal Java variable reference. Object NEVER GC-d while a strong ref exists. Most common</div>
+    </div>
+    <div class="c" onclick="show('soft-ref')">
+      <div class="ctag">SoftReference</div>
+      <div class="cl">Soft Reference</div>
+      <div class="cd">GC-d only when JVM is low on memory. Ideal for memory-sensitive caches. LRU-like behavior</div>
+    </div>
+    <div class="c" onclick="show('weak-ref')">
+      <div class="ctag">WeakReference</div>
+      <div class="cl">Weak Reference</div>
+      <div class="cd">GC-d at NEXT GC cycle when only weakly reachable. WeakHashMap uses this for auto-eviction</div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="c" onclick="show('phantom-ref')">
+      <div class="ctag">PhantomReference</div>
+      <div class="cl">Phantom Reference</div>
+      <div class="cd">Post-mortem cleanup. get() always returns null. Enqueued AFTER finalization. Cleaner API uses this</div>
+    </div>
+    <div class="c" onclick="show('ref-queue')">
+      <div class="ctag">ReferenceQueue</div>
+      <div class="cl">ReferenceQueue</div>
+      <div class="cd">GC enqueues cleared references here. Your thread polls it to trigger cleanup actions</div>
+    </div>
+    <div class="c" onclick="show('finalize')">
+      <div class="ctag">deprecated</div>
+      <div class="cl">finalize() &amp; Cleaner</div>
+      <div class="cd">finalize(): unpredictable, causes GC resurrection, deprecated Java 9. Cleaner (Java 9+): safe replacement</div>
+    </div>
+    <div class="c" onclick="show('off-heap')">
+      <div class="ctag">Unsafe / NIO</div>
+      <div class="cl">Off-Heap Memory</div>
+      <div class="cd">DirectByteBuffer · unsafe.allocateMemory · Not GC-managed · Freed by Cleaner or unsafe.freeMemory</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow">↓ JIT decides how to dispatch method calls</div>
+
+<div class="stage s9">
+  <div class="st">Stage 9 — Virtual Dispatch, invokedynamic &amp; Lambda Internals</div>
+  <div class="row">
+    <div class="c" onclick="show('vtable')">
+      <div class="ctag">invokevirtual</div>
+      <div class="cl">vtable (Virtual Method Table)</div>
+      <div class="cd">Per-class table of pointers to virtual method implementations · Index fixed at compile time · O(1) dispatch</div>
+    </div>
+    <div class="c" onclick="show('itable')">
+      <div class="ctag">invokeinterface</div>
+      <div class="cl">itable (Interface Table)</div>
+      <div class="cd">Per-class table for interface methods · Slower than vtable (interface index unknown at compile time)</div>
+    </div>
+    <div class="c" onclick="show('inline-caches')">
+      <div class="ctag">JIT optimization</div>
+      <div class="cl">Inline Caches</div>
+      <div class="cd">Mono (1 type) → devirtualize fully. Poly (2-3) → type switch. Mega (4+) → vtable lookup. Huge perf gap</div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="c" onclick="show('invokedynamic')">
+      <div class="ctag">Java 7+</div>
+      <div class="cl">invokedynamic</div>
+      <div class="cd">Bootstrap method resolves call site at first invocation. Used for lambdas, string concatenation (+), Groovy/JRuby</div>
+    </div>
+    <div class="c" onclick="show('method-handle')">
+      <div class="ctag">java.lang.invoke</div>
+      <div class="cl">MethodHandle</div>
+      <div class="cd">Low-overhead typed reference to method/field/constructor. JIT-inlineable unlike reflection. Foundation of invokedynamic</div>
+    </div>
+    <div class="c" onclick="show('lambda-internals')">
+      <div class="ctag">LambdaMetafactory</div>
+      <div class="cl">Lambda / Closure Internals</div>
+      <div class="cd">invokedynamic → LambdaMetafactory → generates class at runtime · Captures free variables · No anonymous class overhead on repeated calls</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow">↓ special heap regions &amp; interning</div>
+
+<div class="stage s10">
+  <div class="st">Stage 10 — String Pool, Class Data Sharing &amp; Special Heap Areas</div>
+  <div class="row">
+    <div class="c" onclick="show('string-pool')">
+      <div class="ctag">heap (Java 7+)</div>
+      <div class="cl">String Pool (Intern Pool)</div>
+      <div class="cd">Deduplicates String literals. Lives in heap since Java 7 (was PermGen). intern() manually adds. == works on interned strings</div>
+    </div>
+    <div class="c" onclick="show('cds')">
+      <div class="ctag">-Xshare:dump</div>
+      <div class="cl">Class Data Sharing (CDS)</div>
+      <div class="cd">Pre-processes JDK classes into shared archive (.jsa). Memory-mapped at startup. Reduces startup time &amp; footprint. AppCDS extends to app classes</div>
+    </div>
+    <div class="c" onclick="show('direct-bytebuffer')">
+      <div class="ctag">nio</div>
+      <div class="cl">Direct ByteBuffer</div>
+      <div class="cd">Off-heap native memory buffer. Zero-copy I/O. Freed by Cleaner on GC of the ByteBuffer object (non-deterministic!)</div>
+    </div>
+    <div class="c" onclick="show('var-handle')">
+      <div class="ctag">Java 9+</div>
+      <div class="cl">VarHandle</div>
+      <div class="cd">Atomic field access without Unsafe. getAndAdd · compareAndSet · memory fence modes (plain/opaque/acquire/release/volatile)</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow">↓ before main() runs — and after it crashes</div>
+
+<div class="stage s11">
+  <div class="st">Stage 11 — JVM Startup Sequence &amp; Observability Tooling</div>
+  <div class="row">
+    <div class="c" onclick="show('jvm-startup')">
+      <div class="ctag">bootstrap order</div>
+      <div class="cl">JVM Startup Sequence</div>
+      <div class="cd">java → OS loads libjvm.so → Init GC → Init ClassLoaders → Load java.lang.* → Init main thread → Load &amp; init main class → invoke main()</div>
+    </div>
+    <div class="c" onclick="show('jvmti')">
+      <div class="ctag">-agentlib</div>
+      <div class="cl">JVMTI (JVM Tool Interface)</div>
+      <div class="cd">Native agent API. JProfiler, async-profiler, VisualVM, debuggers all use JVMTI. Hooks: class load, method entry/exit, GC events, thread events</div>
+    </div>
+    <div class="c" onclick="show('jfr')">
+      <div class="ctag">&lt;1% overhead</div>
+      <div class="cl">JFR — Java Flight Recorder</div>
+      <div class="cd">Built-in low-overhead continuous event recording. GC, JIT, threads, I/O, allocations. jcmd PID JFR.start / JFR.dump</div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="c" onclick="show('async-profiler')">
+      <div class="ctag">JVMTI + perf</div>
+      <div class="cl">async-profiler</div>
+      <div class="cd">CPU + allocation + wall-clock profiling. Uses JVMTI + Linux perf_events. No safepoint bias (unlike JFR CPU sampling). Flame graphs</div>
+    </div>
+    <div class="c" onclick="show('jstack-jmap')">
+      <div class="ctag">jcmd / jstack / jmap</div>
+      <div class="cl">JVM Diagnostic Tools</div>
+      <div class="cd">jstack: thread dump. jmap: heap dump/histogram. jstat: GC stats live. jcmd: unified diagnostic commands. jps: list JVM processes</div>
+    </div>
+    <div class="c" onclick="show('graalvm')">
+      <div class="ctag">native-image</div>
+      <div class="cl">GraalVM &amp; AOT Compilation</div>
+      <div class="cd">SubstrateVM: ahead-of-time compiles Java to native binary. No JIT warm-up. Tiny memory footprint. No dynamic class loading. Closed-world assumption</div>
+    </div>
+    <div class="c" onclick="show('virtual-threads')">
+      <div class="ctag">Java 21 Loom</div>
+      <div class="cl">Virtual Threads</div>
+      <div class="cd">M:N threading. JVM schedules onto carrier (OS) threads. Blocking I/O parks virtual thread only. Millions of concurrent threads. No reactive code needed</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow">↓ defining and storing the class metadata</div>
+
+<div class="stage s12">
+  <div class="st">Stage 12 — Class Loading & Metaspace Internals</div>
+  <div class="row">
+    <div class="c" onclick="show('class-loader-hierarchy')">
+      <div class="ctag">rt.jar / modules</div>
+      <div class="cl">ClassLoader Hierarchy</div>
+      <div class="cd">Bootstrap (C++) → Platform/Extension (Java) → Application/System (Java). Each isolates its own namespace.</div>
+    </div>
+    <div class="c" onclick="show('parent-delegation')">
+      <div class="ctag">security</div>
+      <div class="cl">Parent Delegation Model</div>
+      <div class="cd">Child loaders always ask parent to load a class first. Prevents user code from overriding java.lang.String.</div>
+    </div>
+    <div class="c" onclick="show('metaspace')">
+      <div class="ctag">native memory</div>
+      <div class="cl">Metaspace (Replaced PermGen)</div>
+      <div class="cd">Stores Klass structures, method bytecode, and constant pools. Grows dynamically. De-allocated only when ClassLoader dies.</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow">↓ runtime execution and fast-path allocations</div>
+
+<div class="stage s13">
+  <div class="st">Stage 13 — TLAB, Escape Analysis & Safepoints</div>
+  <div class="row">
+    <div class="c" onclick="show('tlab')">
+      <div class="ctag">bump-the-pointer</div>
+      <div class="cl">TLAB (Thread Local Allocation Buffer)</div>
+      <div class="cd">Fast-path allocation in Eden space. Thread-exclusive buffer eliminates the need for CAS or locks during object creation.</div>
+    </div>
+    <div class="c" onclick="show('escape-analysis')">
+      <div class="ctag">C2 JIT</div>
+      <div class="cl">Escape Analysis & Scalar Replacement</div>
+      <div class="cd">If an object doesn't escape a method, C2 JIT explodes it into scalar primitives on the stack/registers. No heap allocation occurs.</div>
+    </div>
+    <div class="c" onclick="show('safepoints')">
+      <div class="ctag">STW pauses</div>
+      <div class="cl">Safepoints & Handshakes</div>
+      <div class="cd">Points where threads safely suspend for GC. Java 10+ Thread-Local Handshakes allow pausing individual threads instead of all threads.</div>
+    </div>
+  </div>
+</div>
+
+</div><div class="info-panel" id="info-panel">
+  <div class="panel-empty" id="panel-empty">
+    <div class="pe-icon">◎</div>
+    <div>Click any component<br>for atom-level definition</div>
+    <div style="font-size:10px;margin-top:4px;color:var(--text3)">Part 2 · Advanced JVM Internals</div>
+  </div>
+  <div class="pc" id="panel-content" style="display:none">
+    <div id="pbadge" class="pbadge"></div>
+    <div id="ptitle" class="ptitle"></div>
+    <div id="pdef" class="pdef"></div>
+    <div id="pbody"></div>
+  </div>
+</div>
+</div><script>
+const DATA = {
+'jmm-overview':{
+  badge:'Stage 6 · Java Memory Model',bc:'var(--ta)',
+  title:'Java Memory Model (JMM) Overview',
+  def:'The JMM (JSR-133, Java 5+) specifies the rules for how threads interact through memory. It defines WHEN a write by one thread becomes visible to another thread. Without the JMM, hardware reordering and CPU cache effects would make concurrent programs impossible to reason about correctly.',
+  points:[
+    'Two threads can observe different values for the same variable if NO synchronization exists between them (thread-local CPU caches, store buffers)',
+    'The JMM does NOT guarantee sequential consistency by default — threads can see stale values unless proper synchronization is used',
+    'The JMM is defined in terms of happens-before (HB) relationships — a partial order over memory actions',
+    'If action A happens-before action B: A\'s effects are guaranteed visible to B',
+    'Memory actions: read, write, monitor lock/unlock, volatile read/write, thread start/join',
+    'JMM allows compiler and CPU to reorder any operations that do not cross HB boundaries',
+    'JMM is an abstraction: underlying barriers (LFENCE, SFENCE, MFENCE) implement HB on real hardware'
+  ],
+  tip:'The JMM says nothing about CPU cycles or time. "Happens-before" is a logical ordering guarantee, not a temporal one. Action A can happen-before B even if B executes nanoseconds before A in wall clock time — it\'s about guaranteed visibility, not scheduling order.'
+},
+'happens-before':{
+  badge:'Stage 6 · JMM',bc:'var(--ta)',
+  title:'Happens-Before (HB) — 8 Rules',
+  def:'Happens-before is the central primitive of the JMM. If A happens-before B, then A\'s memory writes are guaranteed to be visible when B executes. HB is transitive: if A HB B and B HB C then A HB C.',
+  points:[
+    '① Program Order: within a single thread, each action HB every subsequent action in that thread',
+    '② Monitor Unlock → Lock: an unlock on monitor M HB every subsequent lock on the SAME monitor M',
+    '③ Volatile Write → Read: a write to a volatile variable V HB every subsequent read of V',
+    '④ Thread Start: Thread.start() on thread T HB any action in T',
+    '⑤ Thread Join: any action in thread T HB Thread.join(T) returning in another thread',
+    '⑥ Thread Interruption: a call to interrupt() HB the detection of the interrupt in the target thread',
+    '⑦ Object Construction: completion of an object\'s constructor HB the finalize() method of that object',
+    '⑧ Transitivity: if A HB B and B HB C then A HB C — the key composition rule'
+  ],
+  code:'// Classic double-checked locking BUG (pre-Java 5 JMM):\nif (instance == null) {\n  synchronized(this) {\n    if (instance == null)\n      instance = new Singleton(); // BROKEN without volatile!\n  }\n}\n// new Singleton() = 3 steps: alloc, init, assign\n// CPU can reorder: alloc, ASSIGN, init\n// Another thread sees non-null but uninitialized object!\n// Fix: volatile Singleton instance;\n// volatile write → any subsequent volatile read HB → safe',
+  tip:'DCL (Double-Checked Locking) requires volatile because "instance = new Singleton()" is NOT atomic — it\'s 3 operations (allocate memory, initialize fields, assign reference). Without volatile, another thread can see a partially-initialized Singleton. volatile prevents reordering of the write.'
+},
+'volatile':{
+  badge:'Stage 6 · JMM',bc:'var(--ta)',
+  title:'volatile Keyword',
+  def:'volatile guarantees two things: (1) VISIBILITY — writes are immediately flushed to main memory; reads always fetch from main memory. (2) ORDERING — prevents compiler and CPU from reordering volatile accesses. It does NOT provide atomicity for compound operations like i++.',
+  points:[
+    'Visibility: volatile write flushes the written value + all preceding writes to main memory. Volatile read sees the latest write from any thread + all writes that preceded that volatile write',
+    'Ordering: no reordering across a volatile read or write. Acts as a full StoreLoad memory barrier on x86 (MFENCE on Intel)',
+    'Atomic for: reads/writes of any type EXCEPT long/double on 32-bit JVMs (but Java 9+ spec guarantees all volatile long/double are atomic)',
+    'NOT atomic for: i++ (read-modify-write). Use AtomicInteger for compound operations',
+    'Use cases: simple flag (boolean running = true; volatile boolean), lazy initialization status, published object reference (with volatile, final fields of the published object are visible)',
+    'JIT impact: volatile reads/writes cannot be hoisted, eliminated, or reordered by JIT. May inhibit some JIT optimizations in tight loops'
+  ],
+  code:'// Correct volatile flag:\nvolatile boolean running = true;\nvoid stop() { running = false; }  // visible to all threads\nvoid run() { while(running) { /* ... */ } } // reads fresh each time\n\n// Still BROKEN with volatile:\nvolatile int count = 0;\ncount++;  // NOT atomic: read → increment → write. Use AtomicInteger\n\n// Correct:\nAtomicInteger count = new AtomicInteger(0);\ncount.incrementAndGet();  // single atomic CAS operation',
+  tip:'Volatile vs synchronized: volatile = visibility + ordering, no mutual exclusion. synchronized = visibility + ordering + mutual exclusion (one thread at a time). Volatile is faster (no lock acquisition), but insufficient for any operation that requires read-modify-write atomicity.'
+},
+'synchronized-jmm':{
+  badge:'Stage 6 · JMM',bc:'var(--ta)',
+  title:'synchronized & Memory Barriers',
+  def:'synchronized serves two roles: (1) MUTUAL EXCLUSION — only one thread holds the monitor at a time. (2) MEMORY ORDERING — monitor exit (unlock) flushes ALL cached writes to main memory. Monitor entry (lock) clears thread\'s local cache. This creates a happens-before between unlock and subsequent lock.',
+  points:[
+    'MonitorEnter (lock): acts as an acquire barrier — all reads after the lock see all writes before the matching unlock by any thread that previously held this monitor',
+    'MonitorExit (unlock): acts as a release barrier — all writes before the unlock are flushed to main memory, visible to the next thread that acquires this monitor',
+    'JVM implements monitors using OS futex (Linux) or CRITICAL_SECTION (Windows) for fat locks, and CAS for thin locks',
+    'Synchronizing on different objects: provides mutual exclusion and memory barriers but NOT inter-object HB. Two synchronized methods on different locks don\'t form HB',
+    'Static synchronized methods: lock is the Class object (Class<Foo>.class)',
+    'Re-entrant: same thread can acquire the same monitor multiple times without deadlocking (count tracks nesting depth)'
+  ],
+  tip:'Common mistake: synchronizing on a local or new object. synchronized(new Object()) — each thread creates its own lock and never blocks each other. Also: never synchronize on a boxed primitive (Integer, Boolean) — they may be interned and shared in unexpected ways.'
+},
+'final-jmm':{
+  badge:'Stage 6 · JMM',bc:'var(--ta)',
+  title:'final Fields & Safe Publication',
+  def:'The JMM provides a special guarantee for final fields: once an object\'s constructor completes, all threads will see the final fields\' values without any synchronization. This enables immutable objects to be safely shared across threads without locks.',
+  points:[
+    'JMM freeze guarantee: the write to a final field in a constructor freezes the final field\'s value before the constructor returns',
+    'Safe publication via final: if a reference to an object is published (made visible) after the constructor finishes, any thread that sees the reference will also see all the object\'s final fields correctly initialized',
+    'Non-final fields: NOT protected by this guarantee. Another thread may see stale values for non-final fields even if it sees the object reference',
+    'The "this" escape problem: if "this" leaks during construction (e.g., passed to another thread in constructor), the final field guarantee is violated — the other thread may see uninitialized final fields',
+    'Practical use: immutable objects (all final fields) require NO synchronization for safe sharing. String, Integer, etc. are immutable and safe to share',
+    'JIT: final fields can be inlined as constants by JIT if value is known at compile time'
+  ],
+  tip:'"This" escape anti-pattern: class EventListener { EventListener(EventBus bus) { bus.register(this); someField = "initialized"; } } — if bus.register dispatches an event before the constructor returns, the event handler runs with someField = null (not yet initialized), violating the final field guarantee for non-final fields.'
+},
+'cpu-reorder':{
+  badge:'Stage 6 · JMM',bc:'var(--ta)',
+  title:'CPU Reordering & Why JMM Exists',
+  def:'Modern CPUs and compilers reorder memory operations aggressively for performance. Without explicit synchronization, a write by thread A may remain in A\'s store buffer (invisible to other CPUs) indefinitely. The JMM defines the minimum guarantees Java programs can rely on regardless of these hardware-level effects.',
+  points:[
+    'Store buffers: CPUs buffer writes before committing to cache. Other CPUs see stale values until the buffer drains (SFENCE/MFENCE forces drain)',
+    'Invalidation queues: CPU may not immediately apply received cache invalidation messages → sees stale values (LFENCE forces drain)',
+    'x86 TSO (Total Store Order): x86-64 provides stronger ordering than the JMM minimum. Most volatile writes don\'t need extra barriers on x86. On ARM (much weaker memory model), more barriers are needed',
+    'Compiler reordering: javac and JIT can reorder ANY two independent operations. volatile and synchronized prevent this',
+    'Instruction reordering: CPU out-of-order execution can execute instructions in a different order than program order, as long as single-threaded result is correct',
+    'Without barriers: write-then-read reordering is possible. Thread A writes X then reads Y; another thread may see the Y read before the X write is visible'
+  ],
+  tip:'Why is ARM harder than x86 for concurrent code? x86 provides TSO (Total Store Order) — StoreLoad is the only reordering x86 allows. ARM and POWER are much weaker — all 4 reordering types are possible (LoadLoad, LoadStore, StoreLoad, StoreStore). JVM on ARM must emit more barriers for the same JMM guarantee.'
+},
+'object-header':{
+  badge:'Stage 7 · Object Layout',bc:'var(--sa)',
+  title:'Object Memory Layout (Header + Fields)',
+  def:'Every Java object in the heap has a fixed-size header before its fields. On a 64-bit JVM with compressed OOPs (default), the header is typically 12 bytes. Without compressed OOPs, it\'s 16 bytes. Field layout follows the header and is reordered by JVM for alignment efficiency.',
+  points:[
+    'Header (12 bytes, compressed OOPs on): Mark Word (8 bytes) + Klass Pointer (4 bytes, compressed)',
+    'Header (16 bytes, no compression): Mark Word (8 bytes) + Klass Pointer (8 bytes)',
+    'Array objects: extra 4-byte length field after header (so array header = 16 bytes with compressed OOPs)',
+    'Field ordering: JVM reorders fields for alignment (longs/doubles first, then ints, then shorts/chars, then bytes/booleans, then references). NOT necessarily declaration order',
+    'Padding: object total size padded to 8-byte boundary (default). -XX:ObjectAlignmentInBytes controls this',
+    'Instance size: long/double = 8 bytes, int/float = 4 bytes, short/char = 2 bytes, byte/boolean = 1 byte, reference = 4 bytes (compressed) or 8 bytes',
+    'Use JOL (Java Object Layout) library to inspect actual layout: ClassLayout.parseClass(MyClass.class).toPrintable()'
+  ],
+  code:'// Example: new Object() = 16 bytes (12 header + 4 padding)\n// new int[] {1,2,3} = 16+4+4+4+4 = 28 → padded to 32 bytes\n// JOL output example:\n// OFF SZ TYPE  DESCRIPTION\n//   0  8      (object header: mark)\n//   8  4      (object header: class)\n//  12  4  int MyClass.count\n//  16  8 long MyClass.timestamp\n// Total: 24 bytes',
+  tip:'@Contended (Java 8+ jdk.internal.vm.annotation, or sun.misc.Contended with flag): pads a field or class to a full cache line (128 bytes default) to prevent false sharing. Used in ConcurrentHashMap, LongAdder cell arrays. Requires -XX:-RestrictContended to use in user code.'
+},
+'mark-word':{
+  badge:'Stage 7 · Object Layout',bc:'var(--sa)',
+  title:'Mark Word (8-byte object header word)',
+  def:'The first 8 bytes of every object header. Multipurpose: it stores the lock state, GC age, identity hashcode, and GC forwarding pointer — all in the same 8 bytes, with the last 2-3 bits acting as a tag to indicate which interpretation to use.',
+  points:[
+    'Unlocked (bits=01): 31-bit identity hashcode + 4-bit GC age + 1 unused bit + 01 tag',
+    'Biased (bits=101): 54-bit biased thread ID + epoch (2 bits) + GC age (4) + 1 unused + 101 tag',
+    'Thin lock / Lightweight (bits=00): pointer to thread\'s lock record on its JVM stack (displaced mark word stored there) + 00 tag',
+    'Fat lock / Inflated (bits=10): pointer to ObjectMonitor struct (wait queue, owner, count) + 10 tag',
+    'GC mark (bits=11): forwarding pointer to object\'s new location after GC copy/compact. Original mark word moved to new location',
+    'Identity hashcode: lazily computed on first Object.hashCode() call. Stored in mark word when unlocked. When inflated, stored in ObjectMonitor',
+    'Java 17: biased locking disabled by default (-XX:-UseBiasedLocking). Will be removed. Thin locks now the default for uncontended case'
+  ],
+  code:'// Mark word in different states (64-bit JVM, bits 0 = rightmost):\n// Unlocked:  [hashcode:31 | unused:1 | age:4 | 0 | 01]\n// Biased:    [threadID:54 | epoch:2  | age:4 | 1 | 01]\n// Thin lock: [lock record ptr:62              |   00]\n// Fat lock:  [ObjectMonitor ptr:62             |   10]\n// GC mark:   [forwarding ptr:62                |   11]',
+  tip:'Why does identity hashCode() matter for locking? If hashCode() is called on an object, its hashcode is stored in the mark word. Now the object cannot be biased-locked (no room for thread ID). The JVM will go directly to thin locking. Pre-computing hashCode() before entering a lock-heavy path can cause unexpected lock contention patterns.'
+},
+'compressed-oops':{
+  badge:'Stage 7 · Object Layout',bc:'var(--sa)',
+  title:'Compressed Ordinary Object Pointers (OOPs)',
+  def:'On a 64-bit JVM, object references are normally 64-bit pointers. Compressed OOPs (enabled by default when heap ≤ 32GB) store references as 32-bit values, saving ~30-40% memory. The JVM shifts them by 3 bits (since objects are 8-byte aligned) to address up to 32GB with 32 bits.',
+  points:[
+    'Native 64-bit pointer: 8 bytes per reference. On a large heap, billions of refs = massive overhead',
+    'Compressed OOP: 32-bit stored value. JVM does: real_address = stored_value << 3 (shift by ObjectAlignmentInBytes=8 → log2(8)=3 bits)',
+    'This allows 32-bit integers to address 2^32 × 8 = 32GB of heap',
+    'Enabled by default when -Xmx < 32GB. Use -XX:-UseCompressedOops to disable',
+    'Compressed class pointer: Klass pointer in object header also compressed to 4 bytes with -XX:+UseCompressedClassPointers (default). Points into Compressed Class Space (part of Metaspace)',
+    'If heap > 32GB: compressed OOPs disabled automatically. Reference size jumps from 4 to 8 bytes. Effective heap may need to be 48-50% larger to hold same number of objects'
+  ],
+  code:'-XX:+UseCompressedOops          # default when heap < 32GB\n-XX:+UseCompressedClassPointers  # default\n-XX:ObjectAlignmentInBytes=8     # default, max 256\n# Tip: heap just above 32GB threshold = much higher memory than 31GB\n# due to 4→8 byte pointer size jump. Keep below 32GB if possible.',
+  tip:'The 32GB threshold for compressed OOPs is a common FAANG optimization question. If you set -Xmx33g, compressed OOPs turn off and memory usage can increase by 30-40% even though you only added 1GB of heap. Often better to run two 28GB JVM instances than one 33GB one.'
+},
+'lock-unlocked':{
+  badge:'Stage 7 · Lock States',bc:'var(--sa)',
+  title:'Lock State ① — Unlocked',
+  def:'Initial state of every object. The mark word contains the identity hashcode (lazily computed), GC age, and lock bits = 01 (unlocked). No thread holds the monitor. Any thread can attempt to lock it.',
+  points:[
+    'Lock bits (last 2 bits of mark word): 01 = unlocked',
+    'Mark word contents: identity hashcode (31 bits) + GC age (4 bits) + unused (1 bit) + 01',
+    'Thread wants to lock: JVM first tries biased locking (if enabled and object is bias-able)',
+    'Bias-able: object must not have had hashCode() called (hashcode computed = can\'t store thread ID)',
+    'First lock attempt with biased locking enabled: JVM writes thread ID into mark word via CAS, sets bit 101'
+  ],
+  tip:'Java 17 deprecated biased locking; Java 21 will remove it. Biased locking helped single-threaded scenarios (like legacy synchronized containers), but the revocation overhead when contention occurs became a net negative for modern multi-core workloads. In modern JVMs, uncontended case goes directly to thin lock (CAS).'
+},
+'lock-biased':{
+  badge:'Stage 7 · Lock States',bc:'var(--sa)',
+  title:'Lock State ② — Biased Locking (Deprecated)',
+  def:'Optimization for single-thread access. The mark word is "biased" toward a specific thread by writing its ID. That thread can subsequently acquire and release the lock with NO CAS operation — just a check that the mark word matches its thread ID.',
+  points:[
+    'Lock bits: 101 (biased). Mark word contains: thread ID (54 bits) + epoch (2 bits) + GC age (4 bits)',
+    'Epoch: class-level counter. If too many biases revoked for a class, epoch is incremented ("bulk rebias"). Invalidates all existing biases of that class cheaply',
+    'Acquisition by biasing thread: just compare thread ID in mark word. No CAS. No memory barrier. Extremely cheap',
+    'Contention (another thread wants the lock): safepoint required. JVM walks the biasing thread\'s stack to find displaced mark word. Revoke bias → inflate to thin or fat lock',
+    'Revocation cost: STW safepoint (all threads stop!) to revoke a single bias. Very expensive. If a class has frequent bias revocations, JVM may bulk-revoke the entire class',
+    'Disabled by default: Java 17+ (-XX:-UseBiasedLocking). Removing in Java 21'
+  ],
+  tip:'Why was biased locking designed? In the 1990s-2000s, single-threaded use of synchronized containers (Vector, Hashtable, StringBuffer) was common. Biased locking made their monitor entry/exit essentially free for the common single-thread case. With modern code using concurrent collections (ConcurrentHashMap, StringBuilder), biased locking is rarely beneficial.'
+},
+'lock-thin':{
+  badge:'Stage 7 · Lock States',bc:'var(--sa)',
+  title:'Lock State ③ — Thin Lock (Lightweight Lock)',
+  def:'For low-contention multi-threaded scenarios. A thread attempting to lock stores the original mark word in a "Lock Record" on its JVM stack, then uses a CAS (Compare-And-Swap) to atomically write a pointer to that lock record into the mark word.',
+  points:[
+    'Lock bits: 00 (thin locked). Mark word becomes: pointer to lock record on thread\'s stack',
+    'Lock Record: on the acquiring thread\'s JVM stack frame. Contains: displaced mark word (original mark word value)',
+    'Acquisition: CAS(mark word, expected=unlocked pattern, new=ptr to lock record). If CAS succeeds → locked. If CAS fails → another thread has it → consider spinning or inflate',
+    'Spin: JVM may spin (busy-wait) briefly before inflating, hoping the holder releases quickly (-XX:+UseSpinning). Adaptive spinning in modern JVMs',
+    'Release: CAS mark word back from lock record ptr to original mark word. If CAS fails → waiters exist → must inflate first',
+    'Re-entry: same thread locking again increments a counter in the lock record (lightweight re-entrancy). No CAS needed for re-entry',
+    'JVM stack impact: lock records consume space on thread stack. Deep lock nesting can contribute to stack usage'
+  ],
+  tip:'CAS (Compare-And-Swap) is the atomic machine instruction behind thin locks. On x86-64, LOCK CMPXCHG. CAS is expensive (bus lock, cache coherence traffic) but much cheaper than an OS mutex. The entire thin lock scheme is: can we avoid the kernel by doing this in user space with a single atomic instruction?'
+},
+'lock-fat':{
+  badge:'Stage 7 · Lock States',bc:'var(--sa)',
+  title:'Lock State ④ — Fat Lock (Inflated / ObjectMonitor)',
+  def:'Created when thin lock CAS repeatedly fails, indicating real contention. The lock is "inflated" to a heavyweight OS mutex. The mark word stores a pointer to an ObjectMonitor struct which holds a wait queue, lock owner, and entry count.',
+  points:[
+    'Lock bits: 10 (inflated). Mark word = pointer to ObjectMonitor C++ struct',
+    'ObjectMonitor fields: owner thread (or null), entry count (re-entrancy), wait set (threads in Object.wait()), entry set (threads blocked waiting for the lock)',
+    'Blocking: losing thread calls OS futex_wait (Linux) → thread descheduled by OS kernel. No CPU spinning. But OS call adds ~1-10μs latency',
+    'Notification: Object.notify() / notifyAll() moves threads from wait set to entry set',
+    'Deflation: after all threads release and no waiters remain, ObjectMonitor can be deflated (returned to pool) and mark word restored',
+    'JVM maintains ObjectMonitor pool to avoid malloc/free on every inflation',
+    'Contention measurement: -XX:+PrintContendedLocks (diagnostic). JFR monitors lock events. async-profiler -e monitor can profile lock contention'
+  ],
+  tip:'Object.wait() releases the lock and moves the thread to the WAITING state. notify() moves one thread from wait set to entry set (BLOCKED) — the notified thread must reacquire the lock before continuing. This is why wait() must always be in a while loop: spurious wakeups + condition may not be true when lock is re-acquired.'
+},
+'strong-ref':{
+  badge:'Stage 8 · Reference Types',bc:'var(--pa)',
+  title:'Strong Reference',
+  def:'The default reference type in Java. Any object reachable through a chain of strong references from a GC root is considered live and will never be garbage collected (as long as the reference exists). "Normal" Java references — Object obj = new Object() — are strong references.',
+  points:[
+    'GC will never collect an object that has at least one reachable strong reference to it',
+    'To allow GC: set the reference to null (obj = null) or let the referencing object go out of scope',
+    'ClassLoader strong reference chain: ClassLoader → Class objects → static fields → any object reachable from statics. All of these kept alive as long as ClassLoader is alive',
+    'Common leak: static field holding an object → object never GC-d for JVM lifetime. E.g., static List<SomeObject> cache = new ArrayList<>() that grows unbounded'
+  ],
+  tip:'Memory leak via ClassLoader: if a custom ClassLoader holds a strong reference to a Class, and the Class holds a reference back to the ClassLoader (which is always true), and some other long-lived object holds a reference to any object from that ClassLoader — the entire ClassLoader and ALL its loaded classes are stuck in memory forever.'
+},
+'soft-ref':{
+  badge:'Stage 8 · Reference Types',bc:'var(--pa)',
+  title:'SoftReference',
+  def:'The JVM guarantees to clear all SoftReferences before throwing OutOfMemoryError. Before that, it may or may not clear them at its discretion based on memory pressure. The JVM uses a "last-accessed" clock to prefer clearing older, less recently used SoftReferences first — approximating LRU cache behavior.',
+  points:[
+    'Creation: SoftReference<MyObj> ref = new SoftReference<>(obj, queue);',
+    'Access: MyObj obj = ref.get(); — returns null if GC has cleared it',
+    'JVM policy: -XX:SoftRefLRUPolicyMSPerMB — how many ms per MB of free heap to keep soft refs alive. Default 1000ms/MB',
+    'Use case: memory-sensitive image/data caches. Better than strong refs with explicit eviction policy',
+    'Pitfall: SoftReferences to large objects can cause GC pressure spikes — JVM holds onto them until almost OOM, then clears them all at once, causing a pause',
+    'WeakHashMap vs Soft cache: WeakHashMap clears entries at next GC (too aggressive for cache). SoftReference is better for caching'
+  ],
+  tip:'Android uses SoftReferences heavily for bitmap caches. On the JVM, Guava\'s CacheBuilder.softValues() uses SoftReferences. The key insight: SoftReferences don\'t prevent GC but defer it — the JVM will still run GC but won\'t clear soft refs until truly needed. This means they add GC overhead without always helping.'
+},
+'weak-ref':{
+  badge:'Stage 8 · Reference Types',bc:'var(--pa)',
+  title:'WeakReference',
+  def:'Objects with only weak references (no strong or soft references) are eligible for collection at the VERY NEXT GC cycle. The GC does not need to be under memory pressure to collect weakly-reachable objects. WeakReference.get() returns null after the object is collected.',
+  points:[
+    'Creation: WeakReference<MyObj> ref = new WeakReference<>(obj, queue);',
+    'Collection: as soon as no strong/soft references exist, the object is collected at next GC (Young or Old generation)',
+    'WeakHashMap: keys are weakly referenced. When a key object is GC\'d, the entry is automatically removed. Used for canonicalizing maps (one canonical instance per logical key)',
+    'Thread-local cleanup: ThreadLocal leaks happen when a thread lives longer than the objects it references. ThreadLocal itself uses WeakReference for the ThreadLocal key in the map, but the VALUE is a strong reference — values leak if thread never terminates',
+    'Canonical maps: store weak references to all instances of a class. When only one thread needs a particular string/ID, it\'s auto-cleaned. Example: String interning implementation'
+  ],
+  tip:'ThreadLocal leak: Thread → ThreadLocalMap → Entry (WeakReference(ThreadLocal key) → strong ref to VALUE). If the thread is from a thread pool (never terminates), the VALUE stays alive as long as the thread exists. ThreadLocal.remove() must be called explicitly. This is the most common "leak" in Java web applications using thread pools.'
+},
+'phantom-ref':{
+  badge:'Stage 8 · Reference Types',bc:'var(--pa)',
+  title:'PhantomReference',
+  def:'The weakest reference type. PhantomReference.get() ALWAYS returns null — you can never access the referent through a phantom reference. Phantom references are enqueued in a ReferenceQueue AFTER the object has been finalized (or finalize() was never overridden). Used for post-GC cleanup without the dangers of finalize().',
+  points:[
+    'get() always returns null — designed only for receiving notifications, not accessing the object',
+    'Enqueued AFTER object is considered finalized. Contrast: WeakReference enqueued before finalization',
+    'The referent cannot be "resurrected" through a phantom reference (unlike with finalize())',
+    'Java 9+ Cleaner API uses phantom references internally. Cleaner.register(obj, Runnable) — runs Runnable after obj is collected',
+    'Use case: precise cleanup of resources that native libraries allocated for the Java object (native peer pattern)',
+    'JVM holds phantom-referenced objects in memory until the reference is enqueued and cleared — ensure ReferenceQueue is polled'
+  ],
+  code:'// Phantom reference pattern:\nReferenceQueue<MyObj> queue = new ReferenceQueue<>();\nPhantomReference<MyObj> ref = new PhantomReference<>(myObj, queue);\nmyObj = null; // release strong ref\n// ... later in cleanup thread:\nReference<?> cleared = queue.poll();\nif (cleared != null) {\n  // safe to release native resources\n  nativeCleanup(); \n}',
+  tip:'Why does get() return null? To prevent "resurrection" — in finalize(), you can create a new strong reference to "this" and escape collection. PhantomReferences prevent this: the object is truly dead when you receive the phantom notification. This makes PhantomReference safer than finalize() for cleanup logic.'
+},
+'ref-queue':{
+  badge:'Stage 8 · Reference Types',bc:'var(--pa)',
+  title:'ReferenceQueue',
+  def:'A queue where the JVM enqueues Reference objects (Soft, Weak, Phantom) after the GC determines their referent is reclaimable. Your code polls this queue to react to the collection event and perform cleanup.',
+  points:[
+    'poll(): non-blocking. Returns a cleared Reference or null',
+    'remove(): blocking with optional timeout. Waits for a reference to be enqueued',
+    'Enqueuing order: Weak and Soft → enqueued before finalization. Phantom → enqueued after finalization',
+    'Pattern: daemon thread polls the queue and performs cleanup (close files, release native memory, remove from map)',
+    'Cleaner (Java 9+): hides this pattern. Cleaner.register(object, action) — when object is GC-d, action Runnable is run by the Cleaner thread',
+    'finalize() vs Cleaner: finalize runs on the Finalizer thread (can delay GC). Cleaner runs cleanup asynchronously without delaying collection. Prefer Cleaner'
+  ],
+  tip:'DirectByteBuffer cleanup: when a DirectByteBuffer is GC-d, Cleaner (registered during construction) frees the off-heap native memory. But if GC doesn\'t run often enough, native memory OOMs before heap OOMs. Force cleaning: System.gc() (unreliable) or call ((sun.nio.ch.DirectBuffer)buf).cleaner().clean(). Better: always close NIO resources explicitly.'
+},
+'finalize':{
+  badge:'Stage 8 · Reference Types',bc:'var(--pa)',
+  title:'finalize() — Deprecated & Cleaner API',
+  def:'finalize() is a method on Object that the JVM calls ONCE on an object before collecting it. Deprecated in Java 9, will be removed. It causes severe problems: unpredictable timing, single-threaded Finalizer queue, GC resurrection risk, and can delay GC by orders of magnitude.',
+  points:[
+    'Finalizer thread: JVM has a single "Finalizer" thread. All finalize() methods run on this thread sequentially',
+    'GC delay: objects with finalize() are promoted to a "finalization queue" after GC marks them dead. They cannot be collected until finalize() runs. If Finalizer thread is slow, dead objects pile up in Old Gen → OutOfMemoryError',
+    'Resurrection: finalize() can create a new strong reference to "this" — the object becomes live again! It can only be finalized ONCE though. Gross and dangerous',
+    'Cleaner (Java 9+): Cleaner.register(Object obj, Runnable action). Action runs when obj is GC-d. No resurrection possible. Cleaner has its own thread. Preferred replacement',
+    'try-with-resources: for deterministic cleanup (files, sockets), use Closeable + try-with-resources. Never rely on GC for resource release',
+    'Java 18+: finalize() throws UnsupportedOperationException warning. Java 21+ targeting full removal'
+  ],
+  tip:'The finalization queue problem: imagine a heavyweight object (database connection, large native buffer) with finalize(). Under heavy allocation, objects die faster than the Finalizer thread can call finalize() → queue grows → more and more dead objects sit in Old Gen → Major GC triggered repeatedly → application grinds to halt. This is why finalize() was deprecated.'
+},
+'off-heap':{
+  badge:'Stage 8 · References & Memory',bc:'var(--pa)',
+  title:'Off-Heap Memory (DirectByteBuffer, Unsafe, Arena)',
+  def:'Memory allocated outside the Java heap — not GC-managed. Used by high-performance libraries (Netty, Kafka, RocksDB, Lucene) to avoid GC overhead and enable zero-copy I/O. Must be manually freed.',
+  points:[
+    'DirectByteBuffer: ByteBuffer.allocateDirect(size). Backed by native memory via malloc. Registered with Cleaner for deferred free on GC. Lives until ByteBuffer is GC-d — non-deterministic!',
+    'sun.misc.Unsafe.allocateMemory(size): direct malloc. Returns native address. Must call freeMemory() manually. No Cleaner — pure manual management',
+    'java.lang.foreign.MemorySegment (Java 21 FFM API): safe, deterministic off-heap management. Arena-based lifecycle. Replaces Unsafe for off-heap. try-with-resources closes the Arena',
+    'Zero-copy I/O: read file data directly into DirectByteBuffer backed by OS page cache. JVM kernel can transfer to NIC buffer without copying through heap',
+    'GC advantage: off-heap data not scanned by GC → shorter GC pauses for large data sets',
+    'Risk: native memory OOM does NOT throw OutOfMemoryError: Java heap space. It throws OutOfMemoryError: Direct buffer memory or crashes with SIGSEGV if using Unsafe directly'
+  ],
+  tip:'Netty uses off-heap memory pools (PooledByteBufAllocator). When a Netty buffer is released via buf.release(), it returns to the pool rather than freeing native memory. This eliminates per-request malloc/free overhead. Same pattern as object pooling but for native memory.'
+},
+'vtable':{
+  badge:'Stage 9 · Virtual Dispatch',bc:'var(--ra)',
+  title:'vtable (Virtual Method Table)',
+  def:'Every class has a vtable — a table of method pointers for its virtual (non-private, non-static, non-final) methods. When invokevirtual is executed, the JVM reads the vtable index from the bytecode (fixed at compile time) and jumps to the method pointer at that index. O(1) dispatch.',
+  points:[
+    'vtable stored in the class\'s Klass structure (in Metaspace, part of the class metadata)',
+    'Inheritance: subclass vtable starts with all parent\'s vtable entries (in same positions). Overriding a method = updating that slot to point to the new implementation',
+    'vtable index: determined at compile time by javac. Fixed for a given method signature across all subclasses',
+    'invokevirtual bytecode: reads object\'s Klass pointer → reads vtable → reads slot N → calls method pointer',
+    'JIT devirtualization: if JIT knows (via class hierarchy analysis CHA) there\'s only ONE implementation of a virtual method, it can inline the call directly, eliminating the vtable lookup entirely',
+    'Performance: vtable dispatch is very fast (~2-5ns). The bottleneck is usually branch misprediction when different types are seen interleaved'
+  ],
+  tip:'Why final methods are faster: final methods cannot be overridden, so JIT can always devirtualize and inline them without CHA. That\'s why StringBuilder.append() is final and much faster than if it were virtual. More importantly, method inlining enables further optimizations (escape analysis, loop optimizations) across the call boundary.'
+},
+'itable':{
+  badge:'Stage 9 · Virtual Dispatch',bc:'var(--ra)',
+  title:'itable (Interface Method Table)',
+  def:'Used for invokeinterface. Unlike vtable where the method index is fixed at compile time, interface methods can appear at different positions in different implementing classes\' vtables. The itable maps an interface\'s methods to the correct position in the implementing class\'s vtable.',
+  points:[
+    'Problem: if class A implements Comparable and Serializable, and class B implements only Comparable, the same compareTo() method is at DIFFERENT vtable offsets in A vs B',
+    'Solution: itable. Each class has an itable mapping (interface, method_index) pairs to its concrete vtable slots',
+    'invokeinterface is SLOWER than invokevirtual: must search the itable (linear scan in classic implementation; JIT uses inline caches to short-circuit this)',
+    'JIT optimization: after seeing the same concrete type at an interface call site, JIT inserts a type check + direct vtable call (monomorphic inline cache). No itable lookup',
+    'Java 8 default interface methods: stored in interface\'s own itable. Implementing classes inherit them unless overridden',
+    'Modern JVMs: JIT effectively eliminates itable overhead for monomorphic/bimorphic call sites through inline caching'
+  ],
+  tip:'Interface vs abstract class performance: historically invokeinterface was slower. With modern JIT and inline caches, the difference is negligible for monomorphic/bimorphic call sites. Only megamorphic (4+ concrete types) call sites through interfaces have measurable overhead — and even then, it\'s usually not the bottleneck.'
+},
+'inline-caches':{
+  badge:'Stage 9 · Virtual Dispatch',bc:'var(--ra)',
+  title:'Inline Caches (Mono / Poly / Megamorphic)',
+  def:'JIT optimization for virtual dispatch. Instead of going through the vtable every time, the JIT remembers which concrete type (or types) it has seen at a call site and generates a fast-path type check + direct call. Three states with very different performance characteristics.',
+  points:[
+    'Monomorphic (1 concrete type): JIT generates: if (type == CachedType) { call cachedMethod directly } else { deopt / fallback vtable }. Direct call = no vtable lookup + CPU branch predictor can learn it = extremely fast. Method can be inlined',
+    'Bimorphic (2 types): JIT generates two type checks + two direct calls. Still fast, still potentially inlinable',
+    'Polymorphic (3-4 types): JIT generates a type switch. Fast but cannot inline. Some JVMs handle up to 8 types',
+    'Megamorphic (5+ types): JIT gives up on inline cache. Falls back to vtable/itable lookup every time. No inlining. Can be 5-10x slower than monomorphic. Profile-guided: JIT won\'t even JIT-compile the call as direct if it\'s seen too many types',
+    'Practical impact: if a hot method called through an interface receives 10+ different concrete types, it becomes megamorphic. Restructure to limit the number of types at each call site',
+    'JVM flag: -XX:+PrintInlining shows inlining decisions and why inlining was refused (often "megamorphic")'
+  ],
+  tip:'Megamorphic call site FAANG example: a parser that calls process(Event e) where Event has 20 subclasses. If all 20 types flow through the same call site, it\'s megamorphic. Solution: dispatch before the hot loop (visitor pattern, or switch-on-type before the loop), so the inner call site sees only 1-2 types.'
+},
+'invokedynamic':{
+  badge:'Stage 9 · Lambda Internals',bc:'var(--ra)',
+  title:'invokedynamic (indy) — Java 7+',
+  def:'A bytecode instruction that defers method dispatch to user-defined "bootstrap" code at runtime. On first invocation, the bootstrap method resolves the call site to a MethodHandle (or call site object). Subsequent invocations use the cached linkage — extremely fast. Used for lambdas, string concatenation (+), dynamic languages (Groovy, JRuby).',
+  points:[
+    'First call: JVM invokes the bootstrap method specified in the bytecode. Bootstrap runs once and returns a CallSite (constant, mutable, or volatile)',
+    'ConstantCallSite: call site is permanently linked after first bootstrap. Used for lambdas — same lambda always calls same bootstrap. JIT can inline completely',
+    'MutableCallSite: call site can be re-linked (for dynamic languages that might redefine methods)',
+    'String concatenation: Java 9+ compiles "Hello " + name + "!" to invokedynamic + StringConcatFactory bootstrap. More flexible than StringBuilder; JVM can choose best strategy',
+    'Advantage over reflection: MethodHandle dispatch is JIT-inlineable. Reflection is not (crosses JVM boundary). invokedynamic + MethodHandle = same performance as direct method call after JIT warmup',
+    'Bootstrap method resolution: occurs in constant pool. Bootstrap method itself is a static method in a bootstrap class (e.g., LambdaMetafactory, StringConcatFactory)'
+  ],
+  tip:'Why is invokedynamic used for lambdas instead of anonymous inner classes? Anonymous inner classes create a new .class file per lambda (compiled to disk). invokedynamic + LambdaMetafactory generates the implementation class at RUNTIME using ASM bytecode generation. Only one .class file needed, the functional interface. Faster startup, lower memory footprint.'
+},
+'method-handle':{
+  badge:'Stage 9 · Lambda Internals',bc:'var(--ra)',
+  title:'MethodHandle (java.lang.invoke)',
+  def:'A typed, directly executable reference to a method, constructor, or field access. MethodHandles are the low-level mechanism behind invokedynamic. Unlike reflection (Method.invoke), MethodHandles are JIT-inlineable — they perform identically to direct method calls after warmup.',
+  points:[
+    'Lookup: MethodHandles.lookup().findVirtual(MyClass.class, "myMethod", methodType)',
+    'Invoke: mh.invoke(obj, arg1, arg2) — type-safe, JIT-inlineable',
+    'Types: findVirtual (instance), findStatic, findConstructor, findGetter/Setter, findSpecial (super calls)',
+    'Combinators: MethodHandles.filterArguments(), insertArguments(), dropArguments(), foldArguments() — compose handles without reflection',
+    'VarHandle (Java 9+): like MethodHandle but for fields. Supports atomic operations: getAndSet, compareAndSet, getAcquire/setRelease for fine-grained memory ordering',
+    'Performance: after JIT warmup, MethodHandle.invoke() has zero overhead over direct call. Method.invoke() always has overhead (array boxing of args, security checks)',
+    'MethodHandle.asType(): automatic argument and return value conversion (int↔Integer, widening, etc.)'
+  ],
+  code:'// MethodHandle example:\nMethodHandles.Lookup lookup = MethodHandles.lookup();\nMethodHandle mh = lookup.findVirtual(String.class, "length",\n    MethodType.methodType(int.class));\nint len = (int) mh.invoke("hello");  // 5\n\n// VarHandle example:\nVarHandle vh = MethodHandles.lookup()\n    .findVarHandle(MyClass.class, "count", int.class);\nvh.compareAndSet(obj, 0, 1);  // atomic CAS, no Unsafe',
+  tip:'MethodHandle vs Reflection: Method.invoke() creates an Object[] of arguments (boxing primitives), runs security checks on every call, and is not inlined by JIT. MethodHandle.invoke() is polymorphic signature — JIT sees it as a direct call with proper types and inlines it. For hot paths: MethodHandle >> Reflection.'
+},
+'lambda-internals':{
+  badge:'Stage 9 · Lambda Internals',bc:'var(--ra)',
+  title:'Lambda / Closure Internals (LambdaMetafactory)',
+  def:'Lambda expressions in Java compile to invokedynamic bytecode. At runtime, the LambdaMetafactory bootstrap method generates a class that implements the target functional interface, with the lambda body as the implementation method. The generated class is a hidden class (Java 15+).',
+  points:[
+    'Compile time: lambda body → private synthetic method in the enclosing class. Lambda expression → invokedynamic instruction pointing to LambdaMetafactory bootstrap',
+    'Runtime (first call): LambdaMetafactory generates a hidden class implementing the functional interface. The class\'s method calls the synthetic private method via MethodHandle',
+    'Captured variables (closure): if lambda captures local variables, they become constructor parameters of the generated class. Object instantiated per-capture',
+    'Non-capturing lambda: lambda captures nothing. The generated class has no fields. JVM can reuse a SINGLE instance — no allocation per lambda use!',
+    'Hidden class (Java 15+): generated class is not in any ClassLoader namespace. Cannot be loaded by name. GC-d when no references remain. Faster generation than full ASM class loading',
+    'invokespecial in generated class: calls the synthetic lambda body method directly (not via interface). Allows JIT to inline across the lambda boundary',
+    'Serializable lambdas: require additional bootstrap complexity (SerializedLambda), much heavier'
+  ],
+  code:'// Java source:\nRunnable r = () -> System.out.println("hi"); // non-capturing\nRunnable r2 = () -> System.out.println(name); // captures name\n\n// Compiled to (conceptually):\n// Non-capturing: one static singleton instance reused\n// Capturing: new GeneratedRunnable(name) per lambda evaluation\n\n// Bytecode:\n// invokedynamic run()Ljava/lang/Runnable; [LambdaMetafactory]\n// args: [MethodHandle to lambda$0]',
+  tip:'Non-capturing lambda performance: because no fields are needed, the JVM REUSES the same instance. () -> "hello" evaluated 1 million times allocates ONE object. Capturing lambda () -> prefix + "hello" allocates once per evaluation. Avoid capturing unnecessarily in hot paths — extract the captured value to a field or final local.'
+},
+'string-pool':{
+  badge:'Stage 10 · Special Memory Areas',bc:'#c77dff',
+  title:'String Pool (String Intern Pool)',
+  def:'A pool of unique String objects maintained by the JVM. String literals in source code are automatically interned. Calling String.intern() manually adds a string to the pool (or returns the existing pool entry). Strings in the pool are deduplicated — same character content = same object.',
+  points:[
+    'Location: Java 7+ = regular Java heap. Before Java 7 = PermGen (caused PermGen OOM with heavy interning)',
+    'Automatic interning: all String literals ("hello", "world") and + concatenations of literals computed at compile time are automatically in the pool',
+    'intern(): if pool has string with same content, return pool\'s instance. Otherwise, add this string to pool and return it. Now == comparison works',
+    'Pool implementation: a hash table in native memory (not GC-d normally). Weak references to the interned String objects in heap. If heap String is GC-d (no strong refs outside pool), pool entry is removed',
+    '-XX:+UseStringDeduplication (G1 GC): G1 can deduplicate equal non-interned String objects on the heap, saving memory without using intern(). Background concurrent task',
+    '-XX:StringTableSize=65536: size of the intern pool hash table (number of buckets). Increase if many unique strings are interned'
+  ],
+  code:'"hello" == "hello"        // true (both interned, same object)\nnew String("hello") == "hello"  // FALSE (new = heap, not pool)\nnew String("hello").intern() == "hello"  // true (intern returns pool entry)\n\n// Memory: 1 million interned strings → pool table = native memory\n// The actual String objects still live in heap',
+  tip:'String.intern() pitfall: calling intern() on millions of unique strings (e.g., user IDs, UUIDs) fills the intern pool with objects that are never cleaned up until ClassLoader dies. Use a proper cache (WeakHashMap, Guava Cache) instead of intern() for dynamic deduplication. intern() is best for a small, fixed set of known strings.'
+},
+'cds':{
+  badge:'Stage 10 · Special Memory Areas',bc:'#c77dff',
+  title:'Class Data Sharing (CDS) & AppCDS',
+  def:'CDS pre-processes JDK class data into a shared archive file. At JVM startup, this archive is memory-mapped rather than re-loaded from .class files. Multiple JVM instances share the same memory-mapped pages for core JDK classes — saves memory and startup time.',
+  points:[
+    'Create archive: java -Xshare:dump → generates classes.jsa',
+    'Use archive: java -Xshare:on (or auto, the default) → memory-maps the archive at startup',
+    'Benefit: JDK classes (String, ArrayList, HashMap etc.) pre-processed → skip Loading, Linking, and partially Initialization → faster startup',
+    'AppCDS (Java 10+): extends CDS to application classes on the classpath/modulepath. Requires a training run to record loaded classes',
+    'Dynamic CDS (Java 13+): automatically generates archive on application exit for use next run. Zero manual steps',
+    'Memory sharing: OS shares the same physical pages of the archive across all JVM processes. 10 JVMs on same machine share 1 copy of JDK class data in memory',
+    'Micronaut/Quarkus/Spring Boot 3 native: these frameworks optimize startup partly through CDS or AOT compilation'
+  ],
+  tip:'CDS is particularly valuable in containerized/microservice environments where many JVM instances start frequently (e.g., serverless functions, Kubernetes pods). Combined with AppCDS and GraalVM Native Image, modern Java can achieve sub-100ms startup time — comparable to Go or Node.js.'
+},
+'direct-bytebuffer':{
+  badge:'Stage 10 · Special Memory Areas',bc:'#c77dff',
+  title:'Direct ByteBuffer & Memory-Mapped Files',
+  def:'DirectByteBuffer allocates memory directly from the OS (via malloc/mmap), bypassing the Java heap. Used for high-throughput I/O: NIO socket channels, file channels, and memory-mapped files. The data is accessible by both Java and the OS kernel without copying.',
+  points:[
+    'ByteBuffer.allocateDirect(n): allocates n bytes of native memory. Returns DirectByteBuffer backed by that memory',
+    'Zero-copy network I/O: FileChannel.transferTo() / transferFrom() can use sendfile() syscall — OS moves data from file to socket without copying through Java heap',
+    'MappedByteBuffer (memory-mapped file): FileChannel.map() → maps a file region directly to process virtual address space. Reads/writes go through OS page cache. No explicit read/write syscalls',
+    'Lifecycle: native memory freed when ByteBuffer is GC-d AND Cleaner runs. Non-deterministic. Call ((DirectBuffer)buf).cleaner().clean() for immediate free (Java 9+ via unsafe)',
+    'Limit: -XX:MaxDirectMemorySize=1g (default = -Xmx value). Exceeded → OutOfMemoryError: Direct buffer memory',
+    'Netty zero-copy: Netty wraps native memory with PooledDirectByteBuf. Avoids heap copies for network operations. Data path: NIC DMA → OS → Netty buffer → NIC DMA. Never into JVM heap'
+  ],
+  tip:'Memory-mapped files vs FileInputStream: FileInputStream copies data: disk → page cache → kernel buffer → Java heap. Memory-mapped file: disk → page cache → mapped directly into your process. Only JVM thread can read from the mapped address → no extra copy. For large files (>1GB), mmap is dramatically faster.'
+},
+'var-handle':{
+  badge:'Stage 10 · Special Memory Areas',bc:'#c77dff',
+  title:'VarHandle (Java 9+) — Atomic Field Access',
+  def:'VarHandle provides typed, JIT-inlineable access to variables (fields, array elements) with a range of memory ordering modes — from plain (no ordering) to volatile (full barrier). Replaces sun.misc.Unsafe for most use cases. Used in java.util.concurrent internals.',
+  points:[
+    'Access modes: plain (no ordering guarantees), opaque (coherent within thread), acquire/release (one-sided barriers), volatile (full barrier)',
+    'compareAndSet(obj, expected, newValue): atomic CAS on a field. Equivalent to Unsafe.compareAndSwapInt but safe and type-checked',
+    'getAndAdd, getAndSet: atomic read-modify-write operations',
+    'Array VarHandles: VarHandles can target array elements — MethodHandles.arrayElementVarHandle(int[].class)',
+    'JIT: VarHandle operations are intrinsified by JIT → compiled to single machine instructions (LOCK CMPXCHG, LOCK XADD, etc.)',
+    'vs AtomicInteger: VarHandle is more flexible (any field on any class), AtomicInteger is simpler to use. java.util.concurrent now uses VarHandle internally instead of AtomicFieldUpdater or Unsafe'
+  ],
+  tip:'VarHandle.compareAndSet vs compareAndExchange: compareAndSet returns boolean (success/fail). compareAndExchange returns the WITNESS value (the actual value found). The witness helps avoid ABA problems in retry loops: while((witness = vh.compareAndExchange(obj, expected, newVal)) != expected) { expected = witness; } — no separate re-read needed.'
+},
+'jvm-startup':{
+  badge:'Stage 11 · JVM Startup',bc:'#4cc9f0',
+  title:'JVM Startup Sequence (Before main() runs)',
+  def:'What actually happens between typing "java MyApp" and the first line of main() executing. The JVM goes through a complex bootstrap sequence to initialize its own runtime before any user code can run.',
+  points:[
+    '① OS loads java launcher (java binary) → java calls JNI_CreateJavaVM() in libjvm.so',
+    '② libjvm.so initializes: parses JVM flags, creates VM data structures, initializes GC subsystem, creates thread subsystem',
+    '③ Bootstrap ClassLoader initialized (native C++ code, not a Java class)',
+    '④ Core Java classes loaded: java.lang.Object, java.lang.Class, java.lang.String, java.lang.Thread (via Bootstrap CL)',
+    '⑤ java.lang.System initialized: System.in/out/err, properties, security manager, encoding',
+    '⑥ Main thread created: Thread object created for the initial (main) thread',
+    '⑦ Application ClassLoader & Extension CL initialized (now Java code can load classes)',
+    '⑧ Main class loaded & initialized: ClassLoader.loadClass(mainClass) → Loading → Linking → Initialization (<clinit>)',
+    '⑨ main(String[] args) invoked via JNI from the launcher',
+    '⑩ JIT compiler threads started (background daemon threads: C1 compiler thread, C2 compiler thread, sweeper)'
+  ],
+  code:'# Timeline from command to first bytecode:\n# 0ms:     java process spawned\n# 1-5ms:   JVM flag parsing, GC init\n# 5-20ms:  Bootstrap classes loaded (Object, Class, String...)\n# 20-50ms: App ClassLoader created, classpath scanned\n# 50-200ms: Main class + static dependencies loaded + <clinit>\n# 200ms+:  main() method starts executing\n# (CDS / AppCDS can reduce this by 50%+)',
+  tip:'JVM startup time is critical for serverless (AWS Lambda cold start), CLI tools, and microservices. Mitigations: (1) CDS/AppCDS — pre-share class data. (2) GraalVM Native Image — compile to native binary, startup in 10-50ms. (3) Project Leyden (upcoming) — snapshot JVM state after warmup. (4) Quarkus/Micronaut — move framework work to build time.'
+},
+'jvmti':{
+  badge:'Stage 11 · Tooling',bc:'#4cc9f0',
+  title:'JVMTI — JVM Tool Interface',
+  def:'The native API that allows agents (external tools written in C/C++) to observe and control JVM behavior. Every major Java profiler, debugger, and coverage tool (JProfiler, YourKit, IntelliJ debugger, Jacoco, async-profiler) uses JVMTI.',
+  points:[
+    'Agent loaded via: -agentlib:agentname or -agentpath:/path/to/agent.so (native C/C++ agent)',
+    'Java agents: -javaagent:agent.jar — uses java.lang.instrument API (built on top of JVMTI)',
+    'JVMTI capabilities: class load events (ClassFileLoadHook — can rewrite bytecode!), method entry/exit, GC events, thread start/death, monitor events, heap iteration, object allocation events (with overhead)',
+    'Bytecode instrumentation: agents can intercept ClassFileLoadHook and rewrite class bytecode before it\'s loaded. Used by: code coverage (Jacoco inserts counters), APM tools (New Relic, Datadog inject tracing), mocking frameworks (Mockito), AOP (AspectJ weaving)',
+    'Sampling profilers (async-profiler): use JVMTI GetStackTrace + Linux perf_events (hardware PMU) for CPU sampling. No safepoint bias — can sample threads in JIT-compiled code without waiting for safepoints',
+    'Heap sampling: -XX:+HeapMonitoring + JVMTI heap sampling API. async-profiler -e alloc samples allocation. Lower overhead than object allocation events'
+  ],
+  tip:'Safepoint bias in CPU profilers: JVM-based samplers (like old JProfiler, VisualVM) can only take stack traces at SAFEPOINTS. JIT code only has safepoints at method returns and loop back-edges. Code executing in the MIDDLE of a long JIT-compiled method is never sampled — it appears faster than it is. async-profiler avoids this via Linux signals (SIGPROF) + JVMTI, not safepoints.'
+},
+'jfr':{
+  badge:'Stage 11 · Tooling',bc:'#4cc9f0',
+  title:'JFR — Java Flight Recorder',
+  def:'A built-in, low-overhead continuous event recording framework. JFR records JVM and application events to a binary .jfr file with < 1% overhead. Invaluable for production profiling and post-mortem analysis. Integrated with Mission Control for visualization.',
+  points:[
+    'Start: jcmd <pid> JFR.start duration=60s filename=recording.jfr',
+    'Built-in events: GC cycles and durations, JIT compilation events, class loading, thread park/unpark, socket/file I/O, object allocation, safepoints, CPU load, native method profiling',
+    'Circular buffer: JFR can run continuously with a ring buffer (last N minutes). Dump triggered on crash or on demand',
+    'Custom events: annotate a class with @Name, @Label, @Description → your events appear in Mission Control alongside JVM events',
+    'JDK Mission Control (JMC): GUI for .jfr files. Flame graphs, GC analysis, thread analysis, allocation hotspots',
+    'Overhead: < 1% for continuous recording with default settings. Allocation profiling adds ~2-5%. Still usable in production',
+    '-XX:StartFlightRecording=duration=60s,filename=rec.jfr: start at JVM launch'
+  ],
+  tip:'JFR ObjectAllocationInNewTLAB event: fires when a TLAB is exhausted and a new one is allocated. The stack trace points to WHERE large amounts of allocation are happening — better than heap dumps for finding allocation hotspots. For very small allocations (each fit in TLAB), use ObjectAllocationSample event (periodic sampling).'
+},
+'async-profiler':{
+  badge:'Stage 11 · Tooling',bc:'#4cc9f0',
+  title:'async-profiler — Production CPU & Allocation Profiler',
+  def:'The de facto standard for production Java profiling. Uses JVMTI + Linux perf_events (hardware PMU counters and signals) for accurate CPU profiling without safepoint bias. Can profile native code, GC threads, and JVM internals alongside Java code.',
+  points:[
+    'CPU mode (-e cpu): sends SIGPROF at sampling rate → JVMTI GetStackTrace at signal delivery point (anywhere, not just safepoints). No safepoint bias',
+    'Allocation mode (-e alloc): intercepts TLAB allocation events via JVMTI. Shows which methods allocate the most bytes',
+    'Wall-clock mode (-e wall): samples all threads including BLOCKED/WAITING ones. Finds lock contention and I/O waits',
+    'Native code: async-profiler resolves native frames using /proc/self/maps + debug symbols. Shows JVM internal hotspots (GC, JIT compilation, etc.)',
+    'Flame graph output: --output flamegraph. Each column = method, width = CPU time. Navigate call stacks visually',
+    'IntelliJ IDEA integration: async-profiler built-in. Profile with Ctrl+F2 (attach) → view flame graph inline',
+    'JFR output: async-profiler can write .jfr format, allowing Mission Control visualization'
+  ],
+  code:'# Quick profile:\njava -agentpath:/path/asyncprofiler.so=start,event=cpu,\\\n     file=profile.html MyApp\n\n# Or attach to running process:\n./profiler.sh -e cpu -d 30 -f profile.html <pid>\n\n# Allocation profile:\n./profiler.sh -e alloc -d 30 -f alloc.html <pid>',
+  tip:'Differential flame graphs: profile before and after an optimization. Subtract the before from after. Bars that grew taller = regressions. Bars that shrank = improvements. Crucial for performance optimization: you can see exactly which call stacks changed, not just total numbers.'
+},
+'jstack-jmap':{
+  badge:'Stage 11 · Tooling',bc:'#4cc9f0',
+  title:'JVM Diagnostic Tools (jstack, jmap, jstat, jcmd)',
+  def:'Command-line tools bundled with the JDK for inspecting a running JVM process. Essential for production debugging — no restarts required. All work via the JVM\'s JVMTI or attach mechanism.',
+  points:[
+    'jstack <pid>: prints all thread stack traces. Thread name + state (RUNNABLE, BLOCKED, WAITING) + full stack. Look for: threads all BLOCKED on same lock (deadlock), many threads in WAITING (thread pool exhaustion)',
+    'jmap -heap <pid>: prints heap configuration and current usage (Eden, S0, S1, Old, Metaspace)',
+    'jmap -histo <pid>: histogram of objects by class, sorted by total size. Find what is filling the heap',
+    'jmap -dump:format=b,file=heap.hprof <pid>: full heap dump. Load into MAT (Memory Analyzer Tool) or VisualVM to find leaks',
+    'jstat -gcutil <pid> 1000: GC statistics every 1 second. Shows: Eden %, S0%, S1%, Old%, GC count, GC time',
+    'jcmd <pid> help: list all supported commands. jcmd unifies most functionality: VM.flags, GC.run, GC.heap_info, VM.native_memory, JFR.start',
+    'jps: list all JVM processes with their PIDs and main class names'
+  ],
+  code:'# Common production debug workflow:\njps                           # find PID\njstack <pid> > threads.txt     # grab thread dump\njstat -gcutil <pid> 2000 10   # GC every 2s, 10 times\njcmd <pid> GC.heap_info        # heap summary\njmap -histo:live <pid> | head -20  # top 20 object types\njmap -dump:format=b,file=heap.hprof <pid>  # full dump if needed',
+  tip:'Thread dump analysis: if many threads show BLOCKED at "waiting to lock <0x...>", note the lock address. Find which thread is HOLDING that lock — it appears as "locked <0x...>". That\'s your bottleneck thread. If it\'s waiting on I/O or another lock, trace the chain to find the root cause (deadlock detector tool in MAT does this automatically).'
+},
+'graalvm':{
+  badge:'Stage 11 · Tooling & AOT',bc:'#4cc9f0',
+  title:'GraalVM & Native Image (AOT Compilation)',
+  def:'GraalVM is an alternative JVM (JVMCI API) + JDK. Its native-image tool compiles Java to a standalone native binary using ahead-of-time (AOT) compilation. The binary starts in milliseconds, uses less memory, but loses JIT compilation and dynamic class loading.',
+  points:[
+    'SubstrateVM: the lightweight runtime embedded in native-image. Provides GC (Serial or G1), threading, JNI, but no JIT, no class loading at runtime',
+    'Closed-world assumption: at native-image build time, all classes, reflective accesses, JNI calls, resources, and dynamic proxies must be known. No dynamic class loading at runtime',
+    'Reflection: must be declared in reflect-config.json (or via @ReflectionHint). GraalVM traces reachability statically',
+    'Build time: native-image build is SLOW (1-10 minutes, full program analysis). Runtime binary is fast',
+    'Performance: startup 10-50ms vs 200-5000ms for JVM. Memory: 2-10x less than JVM (no JIT, no class metadata). Throughput: lower than warmed JVM (no adaptive JIT optimization)',
+    'Profile-guided optimization (PGO): run with --pgo-instrument → collect profile → rebuild with --pgo. Improves throughput of native image toward JVM levels',
+    'Frameworks with native support: Quarkus (build time DI), Micronaut (build time DI), Spring Boot 3 (AOT processing for native)'
+  ],
+  tip:'GraalVM JIT (in JVM mode): GraalVM can also run as a drop-in JIT for standard JVM (-XX:+UseJVMCICompiler). The GraalVM JIT (written in Java) outperforms C2 for some workloads. Truffle polyglot: GraalVM can execute JavaScript, Python, Ruby inside the same JVM with near-native performance via the Truffle AST interpreter + Graal JIT.'
+},
+'virtual-threads':{
+  badge:'Stage 11 · Project Loom',bc:'#4cc9f0',
+  title:'Virtual Threads (Java 21 — Project Loom)',
+  def:'Virtual threads are lightweight threads managed by the JVM scheduler, not the OS. Millions can exist simultaneously. When a virtual thread blocks (I/O, sleep, lock), the JVM parks it and mounts another virtual thread on the same carrier (OS) thread. No OS thread stack wasted on blocking.',
+  points:[
+    'Creation: Thread.ofVirtual().start(runnable) or Executors.newVirtualThreadPerTaskExecutor()',
+    'Carrier threads: a ForkJoinPool of OS threads (default: number of CPUs). Virtual threads are scheduled onto carriers',
+    'Blocking I/O: when a virtual thread calls a blocking operation (Socket.read, Files.readAllBytes), JVM intercepts via continuation mechanism → unmounts virtual thread from carrier → carrier is free to run other virtual threads → when I/O completes, virtual thread is remounted and continues',
+    'Continuation: the call stack of a virtual thread is stored as a heap object (Continuation) when unmounted. This is why virtual threads can be so lightweight (no OS stack allocated while parked)',
+    'Pinning: virtual thread is PINNED to carrier (cannot unmount) when: inside synchronized block, calling native JNI method. Pinning defeats the purpose — use ReentrantLock instead of synchronized in virtual thread code',
+    'Structured concurrency (Java 21 preview): StructuredTaskScope groups virtual thread tasks — all fail together, results collected together. Like try-with-resources for concurrent tasks',
+    'Thread-local variables: VTs inherit from parent VT. Use ScopedValues (Java 21) instead of ThreadLocal for better VT compatibility'
+  ],
+  code:'// Thread-per-request with virtual threads:\ntry (var executor = Executors.newVirtualThreadPerTaskExecutor()) {\n  for (var request : requests) {\n    executor.submit(() -> handleRequest(request));\n  }\n}  // waits for all\n// 10,000 concurrent requests → 10,000 virtual threads\n// Only ~N_CPU carrier threads actually running at once',
+  tip:'Virtual threads do NOT make CPU-bound work faster. They solve the C10K problem: with OS threads, 10,000 concurrent I/O-blocking threads = 10,000 OS thread stacks (≈80GB RAM). With virtual threads, 10,000 concurrent I/O tasks = ~CPU_COUNT OS threads + 10,000 heap objects (~few KB each). Eliminates the need for reactive/async code (CompletableFuture chains) for I/O concurrency.'
+},
+'class-loader-hierarchy':{
+  badge:'Stage 12 · Class Loading',bc:'#38bdf8',
+  title:'ClassLoader Hierarchy & Namespaces',
+  def:'ClassLoaders dynamically load Java classes into the JVM. They form a hierarchy that provides namespace isolation. A class is uniquely identified by its Fully Qualified Name + its ClassLoader instance.',
+  points:[
+    'Bootstrap ClassLoader: Written in native C++. Loads core Java classes (java.base module, java.lang.*, java.util.*).',
+    'Platform (Extension) ClassLoader: Loads platform-specific or extended APIs. Replaced the ExtClassLoader in Java 9+ module system.',
+    'Application (System) ClassLoader: Loads application-level classes from the classpath or module path.',
+    'Custom ClassLoaders: Used by Tomcat, OSGi, and Spring Boot to isolate web apps, enable hot-reloading, or load classes from encrypted/network sources.',
+    'Visibility: A class loaded by a child can see classes loaded by parents. A parent CANNOT see classes loaded by children.'
+  ],
+  tip:'A classic FAANG question: "Can I write my own java.lang.String?" Answer: You can write the code, but you cannot load it. The Application ClassLoader delegates to the Bootstrap ClassLoader, which finds the legitimate String class first. Even if you force a custom loader, the JVM throws a SecurityException for the java.lang package.'
+},
+'parent-delegation':{
+  badge:'Stage 12 · Class Loading',bc:'#38bdf8',
+  title:'Parent Delegation Model',
+  def:'The standard behavior where a ClassLoader always asks its parent to find and load a class before attempting to load the class itself. This ensures core API integrity and prevents class duplication across loaders.',
+  points:[
+    'Workflow: AppClassLoader → asks PlatformClassLoader → asks BootstrapClassLoader. If Bootstrap fails, Platform tries. If Platform fails, App tries.',
+    'Breaking the model: Sometimes you MUST break parent delegation. Web servers (Tomcat) break it to prioritize the web app\'s WEB-INF/lib over server-wide libraries.',
+    'SPI (Service Provider Interface) problem: Core classes (like java.sql.DriverManager) are loaded by Bootstrap but need to instantiate vendor drivers (like PostgreSQL) located on the App classpath. Bootstrap cannot see App classes.',
+    'Thread Context ClassLoader (TCCL): The workaround for the SPI problem. Threads carry a reference to the AppClassLoader, allowing Bootstrap classes to "reach down" and load vendor implementations.'
+  ],
+  code:'// How ClassLoader.loadClass() conceptually works:\nClass<?> c = findLoadedClass(name);\nif (c == null) {\n  if (parent != null) c = parent.loadClass(name);\n  else c = findBootstrapClassOrNull(name);\n}\nif (c == null) {\n  c = findClass(name); // Custom loading logic here\n}',
+  tip:'Understanding when and why the parent delegation model breaks is crucial for designing extensible systems or plugin architectures using frameworks like Spring Boot, where nested JAR structures demand specialized class loading.'
+},
+'metaspace':{
+  badge:'Stage 12 · Class Loading',bc:'#38bdf8',
+  title:'Metaspace (Memory Management)',
+  def:'Introduced in Java 8 to replace the Permanent Generation (PermGen). Metaspace is an off-heap, native memory region that stores class metadata (Klass structures, method bytecodes, annotations, and constant pools).',
+  points:[
+    'Allocation: Metaspace grows dynamically by default, limited only by available OS memory. (PermGen had a fixed, often easily exhausted limit).',
+    'Class Data: When a class is loaded, its metadata is written to Metaspace. If compressed OOPs are on, a separate "Compressed Class Space" holds the Klass pointers.',
+    'De-allocation: Metaspace memory is tied to the lifecycle of the ClassLoader that loaded the classes. Individual classes cannot be GC\'d; the entire ClassLoader must die for its Metaspace chunks to be reclaimed.',
+    'Memory Leaks: If you dynamically generate classes (CGLib, dynamic proxies) and leak their ClassLoaders, you will cause a Metaspace OOM.',
+    'Flags: -XX:MaxMetaspaceSize sets a hard limit. -XX:MetaspaceSize sets the initial threshold that triggers a Full GC to resize.'
+  ],
+  tip:'In production, ALWAYS set -XX:MaxMetaspaceSize. Leaving it unbounded means a ClassLoader leak won\'t trigger an OOM in the JVM, but will instead consume all system RAM, causing the OS OOM Killer to indiscriminately kill processes (including the JVM).'
+},
+'tlab':{
+  badge:'Stage 13 · Allocation',bc:'#f472b6',
+  title:'Thread Local Allocation Buffer (TLAB)',
+  def:'The JVM\'s mechanism for extremely fast object allocation. To avoid threads fighting over a global lock on the heap\'s Eden space, each thread is given its own small chunk of Eden memory called a TLAB.',
+  points:[
+    'Bump-the-pointer: Allocating an object in a TLAB simply means moving a pointer forward by the object\'s size. Takes only a few CPU instructions.',
+    'No Locks: Because the buffer is exclusive to the thread, allocation requires zero synchronization or Compare-And-Swap (CAS) operations.',
+    'Exhaustion: When a TLAB fills up, the thread requests a new one from Eden. This request is the "slow path" and requires synchronization (usually a CAS on the global Eden pointer).',
+    'Large Objects: Objects too large for a TLAB (or sometimes even Eden) are allocated directly in the Old Generation (Humongous objects in G1 GC).',
+    'PLAB (Promotion Local Allocation Buffer): Similar concept, but used by GC threads during Survivor/Old generation copying to prevent contention.'
+  ],
+  tip:'A common interview question: "Why is object creation in Java actually faster than malloc in C++?" The answer is TLAB. Java object allocation is typically just a pointer addition and a bounds check, whereas C++ malloc requires traversing free lists and locking memory arenas.'
+},
+'escape-analysis':{
+  badge:'Stage 13 · Execution',bc:'#f472b6',
+  title:'Escape Analysis & Scalar Replacement',
+  def:'A C2 JIT compiler optimization. The JIT analyzes if a newly created object "escapes" the method it was created in (e.g., returned, passed to another thread, assigned to a global field). If it does NOT escape, the JVM can completely optimize away the heap allocation.',
+  points:[
+    'Myth busting: Java does NOT allocate objects on the stack. Instead, the JIT uses Scalar Replacement.',
+    'Scalar Replacement: The JIT breaks the object down into its primitive fields (scalars) and places those fields directly into CPU registers or the method\'s execution stack frame.',
+    'Lock Elision: If an object is locked (synchronized) but does not escape the thread, the JIT entirely removes the locking operations.',
+    'Code execution: Eliminates GC overhead for short-lived temporary objects used inside hot loops.',
+    'Limitation: Escape analysis only kicks in after the method becomes "hot" and is compiled by C2. During warmup, the objects are still allocated on the heap.'
+  ],
+  code:'// Escape Analysis in action:\npublic void process() {\n  // Point object never leaves this method\n  Point p = new Point(10, 20); \n  int result = p.x + p.y;\n  System.out.println(result);\n}\n// JIT compiles this down to:\n// int px = 10; int py = 20; \n// int result = px + py; \n// No Point object is ever created on the heap!',
+  tip:'Writing "allocation-free" code used to mean aggressively reusing objects via Object Pools. With modern Escape Analysis, object pooling is often an anti-pattern. Pooling forces objects to escape to the global pool, preventing Scalar Replacement and causing unnecessary GC overhead.'
+},
+'safepoints':{
+  badge:'Stage 13 · Execution',bc:'#f472b6',
+  title:'Safepoints & Thread-Local Handshakes',
+  def:'A safepoint is a known state where all thread stacks map cleanly to GC roots. When a JVM operation requires the world to stop (like a Full GC or bias revocation), it sets a global safepoint flag. Threads must independently notice this flag and suspend themselves.',
+  points:[
+    'Polling: Threads do not magically pause. The JIT inserts "safepoint polls" (reading a specific memory page) at method returns and loop back-edges.',
+    'Time to Safepoint (TTSP): The delay between the JVM requesting a safepoint and all threads actually pausing. Long, uncounted loops (loops without safepoint polls) can cause massive TTSP delays.',
+    'Stop-The-World (STW): Once all threads reach a safepoint, the global operation (like GC marking) runs, and then threads are resumed.',
+    'Thread-Local Handshakes (Java 10+): Allows the JVM to pause a single thread instead of stopping the world. Used for bias revocation, stack trace collection (async-profiler), and some GC phases. Drastically reduces latency.'
+  ],
+  code:'// A loop that could cause high Time To Safepoint (pre-Java 10):\nfor (int i = 0; i < 1_000_000_000; i++) {\n  // If JIT unrolls this loop and removes polls,\n  // other threads waiting to GC are stuck until this finishes.\n}',
+  tip:'If your GC logs show "Total time for which application threads were stopped: 2.5s, Stopping threads took: 2.4s", your problem is NOT the garbage collector. It is Time To Safepoint (TTSP). You have a hot loop somewhere refusing to yield to a safepoint.'
+}
+};
+
+let activeComp = null;
+
+function show(id){
+  const d = DATA[id];
+  if(!d) return;
+  if(activeComp) activeComp.classList.remove('active');
+  const el = document.querySelector(`[onclick="show('${id}')"]`);
+  if(el){ el.classList.add('active'); activeComp = el; }
+
+  document.getElementById('panel-empty').style.display = 'none';
+  const content = document.getElementById('panel-content');
+  content.style.display = 'block';
+
+  document.getElementById('pbadge').textContent = d.badge;
+  document.getElementById('pbadge').style.background = d.bc + '22';
+  document.getElementById('pbadge').style.color = d.bc;
+  document.getElementById('ptitle').textContent = d.title;
+  document.getElementById('pdef').textContent = d.def;
+
+  let html = '';
+  if(d.points && d.points.length){
+    html += '<div class="sh">Key Facts</div>';
+    d.points.forEach(p => { html += `<div class="kp">${p}</div>`; });
+  }
+  if(d.code){
+    html += `<div class="sh" style="margin-top:12px">Code / Flags</div><div class="code">${d.code}</div>`;
+  }
+  if(d.tip){
+    html += `<div class="tip"><div class="tiph">⚡ FAANG Interview Tip</div><div class="tipt">${d.tip}</div></div>`;
+  }
+  document.getElementById('pbody').innerHTML = html;
+}
+</script>
+</body>
+</html>
