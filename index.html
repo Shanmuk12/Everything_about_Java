@@ -1,0 +1,3805 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Java DSA × Microservices Mastery — Scratch to Pro</title>
+
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+
+  :root {
+
+    --bg: #0a0d0f;
+
+    --surface: #0f1417;
+
+    --surface2: #151b20;
+
+    --border: #1e2830;
+
+    --border2: #243040;
+
+    --accent: #00d4aa;
+
+    --accent2: #0099ff;
+
+    --accent3: #ff6b35;
+
+    --accent4: #a855f7;
+
+    --warn: #fbbf24;
+
+    --text: #e2e8f0;
+
+    --text2: #94a3b8;
+
+    --text3: #64748b;
+
+    --green: #22c55e;
+
+    --red: #ef4444;
+
+    --glow: 0 0 20px rgba(0,212,170,0.15);
+
+    --glow2: 0 0 40px rgba(0,212,170,0.08);
+
+  }
+
+
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+
+
+  body {
+
+    background: var(--bg);
+
+    color: var(--text);
+
+    font-family: 'Syne', sans-serif;
+
+    min-height: 100vh;
+
+    overflow-x: hidden;
+
+  }
+
+
+
+  /* ── GRID BACKGROUND ── */
+
+  body::before {
+
+    content: '';
+
+    position: fixed;
+
+    inset: 0;
+
+    background-image:
+
+      linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+
+      linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+
+    background-size: 40px 40px;
+
+    pointer-events: none;
+
+    z-index: 0;
+
+  }
+
+
+
+  /* ── HEADER ── */
+
+  header {
+
+    position: relative;
+
+    padding: 60px 40px 40px;
+
+    border-bottom: 1px solid var(--border);
+
+    z-index: 1;
+
+    overflow: hidden;
+
+  }
+
+
+
+  header::before {
+
+    content: '';
+
+    position: absolute;
+
+    top: -100px; left: -100px;
+
+    width: 500px; height: 500px;
+
+    background: radial-gradient(circle, rgba(0,212,170,0.07) 0%, transparent 70%);
+
+    pointer-events: none;
+
+  }
+
+  header::after {
+
+    content: '';
+
+    position: absolute;
+
+    top: -50px; right: 100px;
+
+    width: 300px; height: 300px;
+
+    background: radial-gradient(circle, rgba(0,153,255,0.06) 0%, transparent 70%);
+
+    pointer-events: none;
+
+  }
+
+
+
+  .header-badge {
+
+    display: inline-flex; align-items: center; gap: 8px;
+
+    background: rgba(0,212,170,0.08);
+
+    border: 1px solid rgba(0,212,170,0.25);
+
+    color: var(--accent);
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 11px;
+
+    padding: 5px 12px;
+
+    border-radius: 4px;
+
+    margin-bottom: 20px;
+
+    letter-spacing: 0.1em;
+
+  }
+
+  .header-badge::before { content: '▶'; font-size: 9px; }
+
+
+
+  h1 {
+
+    font-size: clamp(32px, 5vw, 60px);
+
+    font-weight: 800;
+
+    line-height: 1.05;
+
+    letter-spacing: -0.02em;
+
+    margin-bottom: 16px;
+
+  }
+
+  h1 span.accent { color: var(--accent); }
+
+  h1 span.accent2 { color: var(--accent2); }
+
+
+
+  .header-sub {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 14px;
+
+    color: var(--text2);
+
+    max-width: 680px;
+
+    line-height: 1.7;
+
+    margin-bottom: 36px;
+
+  }
+
+
+
+  .header-stats {
+
+    display: flex; gap: 32px; flex-wrap: wrap;
+
+  }
+
+  .stat {
+
+    display: flex; flex-direction: column; gap: 2px;
+
+  }
+
+  .stat-val {
+
+    font-size: 28px; font-weight: 800;
+
+    color: var(--accent);
+
+    font-family: 'Space Mono', monospace;
+
+  }
+
+  .stat-label {
+
+    font-size: 11px; color: var(--text3);
+
+    font-family: 'JetBrains Mono', monospace;
+
+    letter-spacing: 0.08em;
+
+    text-transform: uppercase;
+
+  }
+
+
+
+  /* ── PROGRESS BAR ── */
+
+  .progress-bar-section {
+
+    padding: 20px 40px;
+
+    border-bottom: 1px solid var(--border);
+
+    background: var(--surface);
+
+    position: sticky; top: 0;
+
+    z-index: 100;
+
+    backdrop-filter: blur(10px);
+
+  }
+
+  .progress-info {
+
+    display: flex; justify-content: space-between; align-items: center;
+
+    margin-bottom: 8px;
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 12px; color: var(--text2);
+
+  }
+
+  .progress-track {
+
+    height: 4px;
+
+    background: var(--border2);
+
+    border-radius: 2px;
+
+    overflow: hidden;
+
+  }
+
+  .progress-fill {
+
+    height: 100%;
+
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+
+    border-radius: 2px;
+
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+
+    width: 0%;
+
+  }
+
+
+
+  /* ── MAIN LAYOUT ── */
+
+  .container {
+
+    max-width: 1200px;
+
+    margin: 0 auto;
+
+    padding: 40px 40px 80px;
+
+    position: relative; z-index: 1;
+
+  }
+
+
+
+  /* ── PHASE TABS ── */
+
+  .phase-tabs {
+
+    display: flex; gap: 4px;
+
+    margin-bottom: 40px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    padding: 6px;
+
+    border-radius: 10px;
+
+    flex-wrap: wrap;
+
+  }
+
+  .phase-tab {
+
+    flex: 1; min-width: 140px;
+
+    padding: 10px 16px;
+
+    border-radius: 6px;
+
+    border: none;
+
+    background: transparent;
+
+    color: var(--text3);
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 12px;
+
+    cursor: pointer;
+
+    transition: all 0.2s;
+
+    text-align: center;
+
+    letter-spacing: 0.04em;
+
+  }
+
+  .phase-tab.active {
+
+    background: rgba(0,212,170,0.12);
+
+    color: var(--accent);
+
+    border: 1px solid rgba(0,212,170,0.3);
+
+  }
+
+  .phase-tab:hover:not(.active) { color: var(--text2); background: var(--surface2); }
+
+
+
+  /* ── PHASE CONTENT ── */
+
+  .phase-content { display: none; }
+
+  .phase-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+
+
+  @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
+
+
+
+  /* ── PHASE HEADER ── */
+
+  .phase-header {
+
+    display: flex; align-items: flex-start; gap: 20px;
+
+    margin-bottom: 32px;
+
+    padding: 28px 32px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+
+    position: relative;
+
+    overflow: hidden;
+
+  }
+
+  .phase-header::before {
+
+    content: '';
+
+    position: absolute;
+
+    top: 0; left: 0; right: 0; height: 2px;
+
+    background: linear-gradient(90deg, var(--accent), var(--accent2), transparent);
+
+  }
+
+  .phase-num {
+
+    font-family: 'Space Mono', monospace;
+
+    font-size: 48px; font-weight: 700;
+
+    color: rgba(0,212,170,0.15);
+
+    line-height: 1;
+
+    min-width: 80px;
+
+  }
+
+  .phase-meta h2 {
+
+    font-size: 22px; font-weight: 700;
+
+    margin-bottom: 8px;
+
+    color: var(--text);
+
+  }
+
+  .phase-meta p {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 13px; color: var(--text2);
+
+    line-height: 1.6; max-width: 600px;
+
+  }
+
+  .phase-tags {
+
+    display: flex; gap: 8px; flex-wrap: wrap;
+
+    margin-top: 12px;
+
+  }
+
+  .tag {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 10px;
+
+    padding: 3px 10px; border-radius: 3px;
+
+    letter-spacing: 0.05em;
+
+  }
+
+  .tag-green { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+
+  .tag-blue { background: rgba(0,153,255,0.1); color: var(--accent2); border: 1px solid rgba(0,153,255,0.2); }
+
+  .tag-orange { background: rgba(255,107,53,0.1); color: var(--accent3); border: 1px solid rgba(255,107,53,0.2); }
+
+  .tag-purple { background: rgba(168,85,247,0.1); color: var(--accent4); border: 1px solid rgba(168,85,247,0.2); }
+
+  .tag-yellow { background: rgba(251,191,36,0.1); color: var(--warn); border: 1px solid rgba(251,191,36,0.2); }
+
+
+
+  /* ── TOPIC CARDS ── */
+
+  .topics-grid {
+
+    display: flex; flex-direction: column; gap: 12px;
+
+  }
+
+
+
+  .topic-card {
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    transition: border-color 0.2s;
+
+  }
+
+  .topic-card:hover { border-color: var(--border2); }
+
+  .topic-card.open { border-color: rgba(0,212,170,0.3); }
+
+
+
+  .topic-header {
+
+    display: flex; align-items: center; gap: 16px;
+
+    padding: 18px 24px;
+
+    cursor: pointer;
+
+    user-select: none;
+
+  }
+
+
+
+  .topic-num {
+
+    font-family: 'Space Mono', monospace;
+
+    font-size: 11px; color: var(--text3);
+
+    min-width: 28px;
+
+  }
+
+  .topic-icon {
+
+    width: 36px; height: 36px;
+
+    border-radius: 8px;
+
+    display: flex; align-items: center; justify-content: center;
+
+    font-size: 16px;
+
+    flex-shrink: 0;
+
+  }
+
+  .topic-title { flex: 1; }
+
+  .topic-title h3 {
+
+    font-size: 15px; font-weight: 700;
+
+    margin-bottom: 2px;
+
+  }
+
+  .topic-title span {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 11px; color: var(--text3);
+
+  }
+
+  .topic-meta {
+
+    display: flex; align-items: center; gap: 12px;
+
+    flex-shrink: 0;
+
+  }
+
+  .difficulty {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 10px; padding: 2px 8px; border-radius: 3px;
+
+  }
+
+  .diff-hard { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+
+  .diff-med { background: rgba(251,191,36,0.1); color: var(--warn); border: 1px solid rgba(251,191,36,0.2); }
+
+  .diff-easy { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+
+
+
+  .check-btn {
+
+    width: 24px; height: 24px;
+
+    border-radius: 6px;
+
+    border: 1px solid var(--border2);
+
+    background: transparent;
+
+    color: var(--text3);
+
+    cursor: pointer;
+
+    font-size: 12px;
+
+    transition: all 0.2s;
+
+    display: flex; align-items: center; justify-content: center;
+
+    flex-shrink: 0;
+
+  }
+
+  .check-btn.done {
+
+    background: rgba(0,212,170,0.15);
+
+    border-color: var(--accent);
+
+    color: var(--accent);
+
+  }
+
+
+
+  .chevron {
+
+    font-size: 10px; color: var(--text3);
+
+    transition: transform 0.3s;
+
+    flex-shrink: 0;
+
+  }
+
+  .topic-card.open .chevron { transform: rotate(180deg); }
+
+
+
+  /* ── TOPIC BODY ── */
+
+  .topic-body {
+
+    display: none;
+
+    padding: 0 24px 24px;
+
+    border-top: 1px solid var(--border);
+
+  }
+
+  .topic-card.open .topic-body { display: block; }
+
+
+
+  .topic-sections {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+
+    gap: 16px;
+
+    margin-top: 20px;
+
+  }
+
+
+
+  .topic-section {
+
+    background: var(--surface2);
+
+    border: 1px solid var(--border);
+
+    border-radius: 8px;
+
+    padding: 16px;
+
+  }
+
+  .topic-section h4 {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 11px;
+
+    color: var(--accent);
+
+    letter-spacing: 0.1em;
+
+    text-transform: uppercase;
+
+    margin-bottom: 10px;
+
+    display: flex; align-items: center; gap: 6px;
+
+  }
+
+  .topic-section h4::before {
+
+    content: '';
+
+    width: 3px; height: 12px;
+
+    background: var(--accent);
+
+    border-radius: 2px;
+
+  }
+
+  .topic-section ul {
+
+    list-style: none;
+
+  }
+
+  .topic-section ul li {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 12px;
+
+    color: var(--text2);
+
+    padding: 4px 0;
+
+    padding-left: 14px;
+
+    position: relative;
+
+    line-height: 1.5;
+
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+
+  }
+
+  .topic-section ul li:last-child { border-bottom: none; }
+
+  .topic-section ul li::before {
+
+    content: '›';
+
+    position: absolute; left: 0;
+
+    color: var(--accent);
+
+  }
+
+
+
+  .code-block {
+
+    background: #070a0c;
+
+    border: 1px solid var(--border);
+
+    border-radius: 6px;
+
+    padding: 14px 16px;
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 12px;
+
+    color: #a8d8a8;
+
+    line-height: 1.6;
+
+    overflow-x: auto;
+
+    margin-top: 8px;
+
+  }
+
+  .code-block .kw { color: #79b8ff; }
+
+  .code-block .cm { color: var(--text3); font-style: italic; }
+
+  .code-block .str { color: #f97583; }
+
+  .code-block .num { color: #ffab70; }
+
+  .code-block .cls { color: #b392f0; }
+
+
+
+  .problems-list {
+
+    margin-top: 16px;
+
+  }
+
+  .problems-list h4 {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 11px; color: var(--accent3);
+
+    letter-spacing: 0.1em; text-transform: uppercase;
+
+    margin-bottom: 10px;
+
+    display: flex; align-items: center; gap: 6px;
+
+  }
+
+  .problems-list h4::before {
+
+    content: '';
+
+    width: 3px; height: 12px;
+
+    background: var(--accent3);
+
+    border-radius: 2px;
+
+  }
+
+  .prob-row {
+
+    display: flex; align-items: center; gap: 10px;
+
+    padding: 8px 12px;
+
+    background: var(--surface2);
+
+    border: 1px solid var(--border);
+
+    border-radius: 6px;
+
+    margin-bottom: 6px;
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 12px;
+
+  }
+
+  .prob-num { color: var(--text3); min-width: 20px; font-size: 10px; }
+
+  .prob-name { color: var(--text2); flex: 1; }
+
+  .prob-src { font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+
+  .src-lc { background: rgba(255,165,0,0.1); color: #ffa500; border: 1px solid rgba(255,165,0,0.2); }
+
+  .src-cf { background: rgba(0,153,255,0.1); color: var(--accent2); border: 1px solid rgba(0,153,255,0.2); }
+
+  .src-ms { background: rgba(0,212,170,0.1); color: var(--accent); border: 1px solid rgba(0,212,170,0.2); }
+
+
+
+  /* ── WEEKLY SCHEDULE ── */
+
+  .schedule-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+
+    gap: 12px;
+
+    margin-top: 24px;
+
+  }
+
+  .week-card {
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-radius: 10px;
+
+    padding: 18px;
+
+    position: relative;
+
+    overflow: hidden;
+
+  }
+
+  .week-card::before {
+
+    content: '';
+
+    position: absolute;
+
+    top: 0; left: 0; right: 0; height: 2px;
+
+  }
+
+  .week-card.w1::before { background: var(--accent); }
+
+  .week-card.w2::before { background: var(--accent2); }
+
+  .week-card.w3::before { background: var(--accent3); }
+
+  .week-card.w4::before { background: var(--accent4); }
+
+
+
+  .week-num {
+
+    font-family: 'Space Mono', monospace;
+
+    font-size: 10px; color: var(--text3);
+
+    letter-spacing: 0.1em; text-transform: uppercase;
+
+    margin-bottom: 8px;
+
+  }
+
+  .week-card h3 {
+
+    font-size: 14px; font-weight: 700;
+
+    margin-bottom: 10px;
+
+  }
+
+  .week-card ul {
+
+    list-style: none;
+
+  }
+
+  .week-card ul li {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 11px; color: var(--text2);
+
+    padding: 3px 0;
+
+    padding-left: 12px;
+
+    position: relative;
+
+  }
+
+  .week-card ul li::before { content: '·'; position: absolute; left: 0; color: var(--accent); }
+
+
+
+  /* ── COMPARISON TABLE ── */
+
+  .table-wrap { overflow-x: auto; margin-top: 20px; }
+
+  table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 12px;
+
+  }
+
+  th {
+
+    background: rgba(0,212,170,0.08);
+
+    color: var(--accent);
+
+    padding: 10px 14px;
+
+    text-align: left;
+
+    border: 1px solid var(--border);
+
+    font-size: 11px;
+
+    letter-spacing: 0.05em;
+
+    text-transform: uppercase;
+
+  }
+
+  td {
+
+    padding: 9px 14px;
+
+    border: 1px solid var(--border);
+
+    color: var(--text2);
+
+    vertical-align: top;
+
+    line-height: 1.5;
+
+  }
+
+  tr:nth-child(even) td { background: rgba(255,255,255,0.01); }
+
+  tr:hover td { background: rgba(0,212,170,0.03); }
+
+
+
+  /* ── 30-DAY CHALLENGE ── */
+
+  .challenge-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+
+    gap: 8px;
+
+    margin-top: 20px;
+
+  }
+
+  .day-cell {
+
+    aspect-ratio: 1;
+
+    border: 1px solid var(--border);
+
+    border-radius: 8px;
+
+    display: flex; flex-direction: column;
+
+    align-items: center; justify-content: center;
+
+    font-family: 'Space Mono', monospace;
+
+    cursor: pointer;
+
+    transition: all 0.2s;
+
+    position: relative;
+
+    background: var(--surface);
+
+  }
+
+  .day-cell:hover { border-color: var(--accent); background: rgba(0,212,170,0.05); }
+
+  .day-cell.done { background: rgba(0,212,170,0.1); border-color: rgba(0,212,170,0.4); }
+
+  .day-cell.done::after {
+
+    content: '✓';
+
+    position: absolute; top: 4px; right: 6px;
+
+    font-size: 9px; color: var(--accent);
+
+  }
+
+  .day-num { font-size: 16px; font-weight: 700; color: var(--text); }
+
+  .day-topic { font-size: 8px; color: var(--text3); text-align: center; margin-top: 2px; line-height: 1.3; }
+
+
+
+  /* ── RESOURCE CARDS ── */
+
+  .resources-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+
+    gap: 12px;
+
+    margin-top: 20px;
+
+  }
+
+  .resource-card {
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-radius: 10px;
+
+    padding: 18px;
+
+    transition: border-color 0.2s;
+
+  }
+
+  .resource-card:hover { border-color: var(--border2); }
+
+  .resource-card .res-type {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 10px; color: var(--accent2);
+
+    letter-spacing: 0.1em; text-transform: uppercase;
+
+    margin-bottom: 8px;
+
+  }
+
+  .resource-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+
+  .resource-card p {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 11px; color: var(--text2); line-height: 1.5;
+
+  }
+
+  .res-rating {
+
+    display: flex; gap: 2px; margin-top: 10px;
+
+  }
+
+  .star { color: var(--warn); font-size: 12px; }
+
+
+
+  /* ── TEMPLATE BLOCK ── */
+
+  .template-card {
+
+    background: #060a0c;
+
+    border: 1px solid var(--border);
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    margin-bottom: 16px;
+
+  }
+
+  .template-header {
+
+    display: flex; align-items: center; gap: 12px;
+
+    padding: 12px 16px;
+
+    background: var(--surface);
+
+    border-bottom: 1px solid var(--border);
+
+  }
+
+  .template-dots { display: flex; gap: 6px; }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .dot-r { background: #ef4444; }
+
+  .dot-y { background: #fbbf24; }
+
+  .dot-g { background: #22c55e; }
+
+  .template-name {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 12px; color: var(--text2);
+
+  }
+
+  .template-body {
+
+    padding: 16px;
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 12px;
+
+    color: #a8d8a8;
+
+    line-height: 1.7;
+
+    white-space: pre;
+
+    overflow-x: auto;
+
+  }
+
+  .template-body .kw { color: #79b8ff; }
+
+  .template-body .cls { color: #b392f0; }
+
+  .template-body .cm { color: #6e7681; }
+
+  .template-body .str { color: #f97583; }
+
+  .template-body .num { color: #ffab70; }
+
+
+
+  /* ── CALLOUT ── */
+
+  .callout {
+
+    display: flex; gap: 12px;
+
+    padding: 14px 18px;
+
+    border-radius: 8px;
+
+    margin-top: 12px;
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 12px;
+
+    line-height: 1.6;
+
+  }
+
+  .callout-warn {
+
+    background: rgba(251,191,36,0.06);
+
+    border: 1px solid rgba(251,191,36,0.2);
+
+    color: var(--text2);
+
+  }
+
+  .callout-warn .ci { color: var(--warn); font-size: 16px; }
+
+  .callout-info {
+
+    background: rgba(0,153,255,0.06);
+
+    border: 1px solid rgba(0,153,255,0.2);
+
+    color: var(--text2);
+
+  }
+
+  .callout-info .ci { color: var(--accent2); font-size: 16px; }
+
+  .callout-success {
+
+    background: rgba(34,197,94,0.06);
+
+    border: 1px solid rgba(34,197,94,0.2);
+
+    color: var(--text2);
+
+  }
+
+  .callout-success .ci { color: var(--green); font-size: 16px; }
+
+
+
+  /* ── FOOTER ── */
+
+  footer {
+
+    border-top: 1px solid var(--border);
+
+    padding: 24px 40px;
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 11px;
+
+    color: var(--text3);
+
+    display: flex; justify-content: space-between; align-items: center;
+
+    position: relative; z-index: 1;
+
+  }
+
+  footer span.accent { color: var(--accent); }
+
+
+
+  /* ── SECTION TITLE ── */
+
+  .section-title {
+
+    font-family: 'JetBrains Mono', monospace;
+
+    font-size: 11px; color: var(--text3);
+
+    letter-spacing: 0.12em;
+
+    text-transform: uppercase;
+
+    margin: 32px 0 16px;
+
+    display: flex; align-items: center; gap: 10px;
+
+  }
+
+  .section-title::after {
+
+    content: '';
+
+    flex: 1; height: 1px;
+
+    background: var(--border);
+
+  }
+
+
+
+  /* ── RESPONSIVE ── */
+
+  @media (max-width: 640px) {
+
+    header, .container { padding-left: 20px; padding-right: 20px; }
+
+    .progress-bar-section { padding: 14px 20px; }
+
+    .phase-header { flex-direction: column; }
+
+    .topic-sections { grid-template-columns: 1fr; }
+
+  }
+
+
+
+  /* ── ANIMATIONS ── */
+
+  .topic-card { animation: slideUp 0.3s ease backwards; }
+
+  @keyframes slideUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: none; } }
+
+</style>
+
+</head>
+
+<body>
+
+
+
+<!-- HEADER -->
+
+<header>
+
+  <div class="header-badge">JAVA DSA × MICROSERVICES MASTERY — v2025</div>
+
+  <h1>
+
+    <span class="accent">Java</span> to Product<br>
+
+    <span class="accent2">Company</span> Ready.
+
+  </h1>
+
+  <p class="header-sub">
+
+    A complete 3–4 month roadmap for Java backend developers in service-based companies<br>
+
+    targeting SDE-2 / SDE-3 at Google, Amazon, Microsoft, Atlassian, Adobe, Goldman Sachs.
+
+  </p>
+
+  <div class="header-stats">
+
+    <div class="stat"><span class="stat-val">13</span><span class="stat-label">Phase 0 Deep Topics</span></div>
+
+    <div class="stat"><span class="stat-val">14</span><span class="stat-label">DSA Topics</span></div>
+
+    <div class="stat"><span class="stat-val">30</span><span class="stat-label">Day Challenge</span></div>
+
+    <div class="stat"><span class="stat-val">~120</span><span class="stat-label">Days Total</span></div>
+
+  </div>
+
+</header>
+
+
+
+<!-- PROGRESS BAR -->
+
+<div class="progress-bar-section">
+
+  <div class="progress-info">
+
+    <span>// ROADMAP PROGRESS</span>
+
+    <span id="progress-text">0 / 27 topics completed</span>
+
+  </div>
+
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+</div>
+
+
+
+<!-- MAIN CONTENT -->
+
+<div class="container">
+
+
+
+  <!-- PHASE TABS -->
+
+  <div class="phase-tabs">
+
+    <button class="phase-tab active" onclick="showPhase(0, this)">Phase 0 · Internals</button>
+
+    <button class="phase-tab" onclick="showPhase(1, this)">Phase 1 · Core DSA</button>
+
+    <button class="phase-tab" onclick="showPhase(2, this)">Phase 2 · Advanced</button>
+
+    <button class="phase-tab" onclick="showPhase(3, this)">Templates</button>
+
+    <button class="phase-tab" onclick="showPhase(4, this)">30-Day Challenge</button>
+
+    <button class="phase-tab" onclick="showPhase(5, this)">Resources</button>
+
+  </div>
+
+
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ PHASE 0 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+
+  <div class="phase-content active" id="phase-0">
+
+    <div class="phase-header">
+
+      <div class="phase-num">00</div>
+
+      <div class="phase-meta">
+
+        <h2>Java Internals for DSA &amp; Production Mastery</h2>
+
+        <p>The most critical phase. Go deep on JVM, memory model, and Java internals so you never get surprised in interviews or production debugging. Every topic has real microservices use cases.</p>
+
+        <div class="phase-tags">
+
+          <span class="tag tag-yellow">4–5 Weeks</span>
+
+          <span class="tag tag-green">Most Important Phase</span>
+
+          <span class="tag tag-blue">JVM Internals</span>
+
+          <span class="tag tag-orange">Microservices Relevance</span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="topics-grid" id="p0-topics">
+
+
+
+      <!-- T1: JVM Architecture -->
+
+      <div class="topic-card" data-id="t1">
+
+        <div class="topic-header" onclick="toggleTopic(this)">
+
+          <span class="topic-num">01</span>
+
+          <div class="topic-icon" style="background:rgba(0,212,170,0.1)">🏗️</div>
+
+          <div class="topic-title">
+
+            <h3>JVM Architecture &amp; Memory Model</h3>
+
+            <span>Heap · Metaspace · Stack · TLAB · G1GC · Young/Old Gen · Tenuring</span>
+
+          </div>
+
+          <div class="topic-meta">
+
+            <span class="difficulty diff-hard">DEEP</span>
+
+            <button class="check-btn" onclick="markDone(event, this)">✓</button>
+
+            <span class="chevron">▼</span>
+
+          </div>
+
+        </div>
+
+        <div class="topic-body">
+
+          <div class="topic-sections">
+
+            <div class="topic-section">
+
+              <h4>Core Concept</h4>
+
+              <ul>
+
+                <li>Classloader subsystem: Bootstrap → Extension → App</li>
+
+                <li>Heap: Young Gen (Eden + S0 + S1) → Old Gen → Metaspace</li>
+
+                <li>TLAB: Thread-Local Allocation Buffer — allocations without CAS</li>
+
+                <li>JIT: C1 (quick) → C2 (optimized) compilation tiers</li>
+
+                <li>G1GC: Region-based, concurrent, low-pause collector</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Interview Traps</h4>
+
+              <ul>
+
+                <li>"Where does String pool live?" — Heap since Java 7</li>
+
+                <li>OutOfMemoryError in Metaspace ≠ Heap OOM</li>
+
+                <li>Stack overflow ≠ Heap overflow — different regions</li>
+
+                <li>Static variables in Metaspace, not Stack</li>
+
+                <li>TLAB exhaustion causes minor GC, not major</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Microservices Connection</h4>
+
+              <ul>
+
+                <li>Tune -Xmx / -Xms to avoid container OOMKill</li>
+
+                <li>G1GC for low-latency REST APIs (-XX:MaxGCPauseMillis=100)</li>
+
+                <li>Metaspace explosion with dynamic classloading (Groovy scripts)</li>
+
+                <li>ZGC / Shenandoah for sub-millisecond pauses in Kafka consumers</li>
+
+                <li>Monitor via JFR + Micrometer in Spring Boot Actuator</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Production Debug Scenario</h4>
+
+              <ul>
+
+                <li>Problem: Spring Boot pod OOMKilled every 6 hours</li>
+
+                <li>Root cause: Heap leak in ThreadLocal not removed after request</li>
+
+                <li>Fix: Use try-finally in Filter to call remove()</li>
+
+                <li>Tool: jmap -histo:live &lt;pid&gt; + Eclipse MAT analysis</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+          <div class="problems-list">
+
+            <h4>Practice Problems</h4>
+
+            <div class="prob-row"><span class="prob-num">P1</span><span class="prob-name">Implement a simple LRU Cache (tests object lifecycle)</span><span class="prob-src src-lc">LC #146</span></div>
+
+            <div class="prob-row"><span class="prob-num">P2</span><span class="prob-name">Diagnose memory leak from given heap dump (interview scenario)</span><span class="prob-src src-ms">SYS</span></div>
+
+            <div class="prob-row"><span class="prob-num">P3</span><span class="prob-name">Write GC-friendly object pooling for DB connections</span><span class="prob-src src-ms">PROD</span></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- T2: Object Creation -->
+
+      <div class="topic-card" data-id="t2">
+
+        <div class="topic-header" onclick="toggleTopic(this)">
+
+          <span class="topic-num">02</span>
+
+          <div class="topic-icon" style="background:rgba(0,153,255,0.1)">🔩</div>
+
+          <div class="topic-title">
+
+            <h3>Object Creation &amp; Lifecycle</h3>
+
+            <span>new keyword flow · Object header · Mark word · Escape analysis</span>
+
+          </div>
+
+          <div class="topic-meta">
+
+            <span class="difficulty diff-hard">DEEP</span>
+
+            <button class="check-btn" onclick="markDone(event, this)">✓</button>
+
+            <span class="chevron">▼</span>
+
+          </div>
+
+        </div>
+
+        <div class="topic-body">
+
+          <div class="topic-sections">
+
+            <div class="topic-section">
+
+              <h4>Object Creation Flow</h4>
+
+              <ul>
+
+                <li>1. Check class is loaded → 2. Allocate in TLAB → 3. Zero-initialize fields → 4. Set object header → 5. Run constructor</li>
+
+                <li>Object header: mark word (8B) + klass pointer (4B compressed)</li>
+
+                <li>Mark word stores: hashCode, GC age bits, lock state, monitor ptr</li>
+
+                <li>Escape analysis: JVM can stack-allocate if object doesn't escape method</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Internals Deep Dive</h4>
+
+              <ul>
+
+                <li>Age bits: 4 bits → max tenuring threshold = 15</li>
+
+                <li>Biased locking removed in JDK 15 (JEP 374)</li>
+
+                <li>Virtual threads (JDK 21): object on heap, stack in heap</li>
+
+                <li>Records: auto-generate compact constructor + final fields</li>
+
+                <li>Singleton: double-checked locking needs volatile for safe publication</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Interview Questions</h4>
+
+              <ul>
+
+                <li>"How is new String() different from literal?"</li>
+
+                <li>"When does an object get promoted to Old Gen?"</li>
+
+                <li>"Can Java allocate on stack?" — Yes, escape analysis</li>
+
+                <li>"What's inside an object header?"</li>
+
+                <li>"Why is double-checked singleton broken without volatile?"</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+          <div class="problems-list">
+
+            <h4>Practice Problems</h4>
+
+            <div class="prob-row"><span class="prob-num">P1</span><span class="prob-name">Implement thread-safe Singleton (all 5 ways)</span><span class="prob-src src-ms">INT</span></div>
+
+            <div class="prob-row"><span class="prob-num">P2</span><span class="prob-name">Design Immutable Class with nested mutable object</span><span class="prob-src src-ms">INT</span></div>
+
+            <div class="prob-row"><span class="prob-num">P3</span><span class="prob-name">Valid Anagram (tests String creation patterns)</span><span class="prob-src src-lc">LC #242</span></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- T3: String Deep Dive -->
+
+      <div class="topic-card" data-id="t3">
+
+        <div class="topic-header" onclick="toggleTopic(this)">
+
+          <span class="topic-num">03</span>
+
+          <div class="topic-icon" style="background:rgba(255,107,53,0.1)">🔤</div>
+
+          <div class="topic-title">
+
+            <h3>String Deep Dive</h3>
+
+            <span>Pool · Immutability · + operator bytecode · split/substring internals</span>
+
+          </div>
+
+          <div class="topic-meta">
+
+            <span class="difficulty diff-hard">DEEP</span>
+
+            <button class="check-btn" onclick="markDone(event, this)">✓</button>
+
+            <span class="chevron">▼</span>
+
+          </div>
+
+        </div>
+
+        <div class="topic-body">
+
+          <div class="topic-sections">
+
+            <div class="topic-section">
+
+              <h4>Immutability Internals</h4>
+
+              <ul>
+
+                <li>char[] value is private final — but array itself is mutable (reflection risk)</li>
+
+                <li>Java 9+: compact strings — LATIN1 uses byte[], UTF16 uses byte[2*n]</li>
+
+                <li>String pool: HashMap&lt;String,WeakRef&gt; in heap (interning)</li>
+
+                <li>intern() manually adds to pool — use for memory optimization</li>
+
+                <li>s1 == s2 for literals (same pool ref); .equals() for value comparison</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>+ Operator Bytecode</h4>
+
+              <ul>
+
+                <li>Pre Java 9: compiled to StringBuilder().append().toString()</li>
+
+                <li>Java 9+: invokedynamic via StringConcatFactory (faster)</li>
+
+                <li>In loops: each iteration creates new StringBuilder — use explicit SB</li>
+
+                <li>StringBuilder: not thread-safe, O(1) amortized append</li>
+
+                <li>StringBuffer: synchronized, use only when shared across threads</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>split() / substring() Source</h4>
+
+              <ul>
+
+                <li>split(regex): compiles Pattern every call — cache Pattern for perf</li>
+
+                <li>Java 7u6+: substring() copies char[] (fixed memory leak from pre-7 view)</li>
+
+                <li>indexOf() uses naive O(n*m) for short patterns, Boyer-Moore for longer</li>
+
+                <li>String.format() is ~5x slower than concatenation — avoid in hot paths</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>DSA Critical Patterns</h4>
+
+              <ul>
+
+                <li>char[] over String for O(1) mutation in problems</li>
+
+                <li>toCharArray() = O(n) copy — do once, then work on array</li>
+
+                <li>s.charAt(i) - 'a' → 0-indexed alphabet mapping</li>
+
+                <li>Integer.parseInt() throws NumberFormatException — always validate</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+          <div class="problems-list">
+
+            <h4>Must-Solve Problems</h4>
+
+            <div class="prob-row"><span class="prob-num">P1</span><span class="prob-name">Longest Substring Without Repeating Characters</span><span class="prob-src src-lc">LC #3</span></div>
+
+            <div class="prob-row"><span class="prob-num">P2</span><span class="prob-name">Group Anagrams</span><span class="prob-src src-lc">LC #49</span></div>
+
+            <div class="prob-row"><span class="prob-num">P3</span><span class="prob-name">Minimum Window Substring</span><span class="prob-src src-lc">LC #76</span></div>
+
+            <div class="prob-row"><span class="prob-num">P4</span><span class="prob-name">Decode Ways</span><span class="prob-src src-lc">LC #91</span></div>
+
+            <div class="prob-row"><span class="prob-num">P5</span><span class="prob-name">Parse HTTP request string efficiently (microservice interview)</span><span class="prob-src src-ms">INT</span></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- T4: Primitives & Wrappers -->
+
+      <div class="topic-card" data-id="t4">
+
+        <div class="topic-header" onclick="toggleTopic(this)">
+
+          <span class="topic-num">04</span>
+
+          <div class="topic-icon" style="background:rgba(168,85,247,0.1)">🔢</div>
+
+          <div class="topic-title">
+
+            <h3>Primitive Types &amp; Wrappers</h3>
+
+            <span>Autoboxing traps · Integer cache · Memory layout</span>
+
+          </div>
+
+          <div class="topic-meta">
+
+            <span class="difficulty diff-med">MED</span>
+
+            <button class="check-btn" onclick="markDone(event, this)">✓</button>
+
+            <span class="chevron">▼</span>
+
+          </div>
+
+        </div>
+
+        <div class="topic-body">
+
+          <div class="topic-sections">
+
+            <div class="topic-section">
+
+              <h4>Autoboxing Traps</h4>
+
+              <ul>
+
+                <li>Integer.valueOf(-128 to 127) returns cached instance</li>
+
+                <li>Integer a=127; Integer b=127; a==b → TRUE (cached)</li>
+
+                <li>Integer a=128; Integer b=128; a==b → FALSE (new objects!)</li>
+
+                <li>Long l = null; long primitive = l; → NullPointerException!</li>
+
+                <li>List&lt;Integer&gt; remove(int index) vs remove(Integer object) — autoboxing matters</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Memory Layout</h4>
+
+              <ul>
+
+                <li>int: 4B on stack / in object, Integer: 16B on heap</li>
+
+                <li>int[] arr = new int[n]: contiguous 4n bytes</li>
+
+                <li>Integer[] arr: array of 8B pointers + objects scattered</li>
+
+                <li>Use int[] in DSA — Integer[] causes boxing overhead</li>
+
+                <li>HashMap&lt;Integer,Integer&gt; = ~48B per entry overhead</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+          <div class="callout callout-warn">
+
+            <span class="ci">⚠</span>
+
+            <span><strong>Interview Trap:</strong> Comparing Integer with == instead of .equals() is one of the most common Java bugs. Always use .equals() for object comparison, primitives use ==.</span>
+
+          </div>
+
+          <div class="problems-list">
+
+            <h4>Practice</h4>
+
+            <div class="prob-row"><span class="prob-num">P1</span><span class="prob-name">Two Sum (HashMap with Integer keys — boxing analysis)</span><span class="prob-src src-lc">LC #1</span></div>
+
+            <div class="prob-row"><span class="prob-num">P2</span><span class="prob-name">Find the Duplicate Number (int array, no boxing)</span><span class="prob-src src-lc">LC #287</span></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- T5: Collections Internals -->
+
+      <div class="topic-card" data-id="t5">
+
+        <div class="topic-header" onclick="toggleTopic(this)">
+
+          <span class="topic-num">08</span>
+
+          <div class="topic-icon" style="background:rgba(0,212,170,0.1)">📦</div>
+
+          <div class="topic-title">
+
+            <h3>Collections Framework Internals</h3>
+
+            <span>ArrayList · HashMap · TreeMap · PriorityQueue · Load factor · Red-Black tree</span>
+
+          </div>
+
+          <div class="topic-meta">
+
+            <span class="difficulty diff-hard">CRITICAL</span>
+
+            <button class="check-btn" onclick="markDone(event, this)">✓</button>
+
+            <span class="chevron">▼</span>
+
+          </div>
+
+        </div>
+
+        <div class="topic-body">
+
+          <div class="table-wrap">
+
+            <table>
+
+              <tr><th>Collection</th><th>Underlying Structure</th><th>get</th><th>put/add</th><th>Key Internal Detail</th></tr>
+
+              <tr><td>ArrayList</td><td>Object[] + size int</td><td>O(1)</td><td>O(1)amort</td><td>Grows by 1.5x; ensureCapacity; System.arraycopy on grow</td></tr>
+
+              <tr><td>LinkedList</td><td>Doubly linked Node&lt;E&gt;</td><td>O(n)</td><td>O(1)</td><td>Each node = 24B overhead; poor cache locality</td></tr>
+
+              <tr><td>HashMap</td><td>Node[] table + load factor</td><td>O(1)avg</td><td>O(1)avg</td><td>Default cap=16, LF=0.75; treeifies at 8 entries (RB tree)</td></tr>
+
+              <tr><td>LinkedHashMap</td><td>HashMap + doubly linked order</td><td>O(1)</td><td>O(1)</td><td>accessOrder=true → LRU cache; removeEldestEntry override</td></tr>
+
+              <tr><td>TreeMap</td><td>Red-Black Tree</td><td>O(log n)</td><td>O(log n)</td><td>Sorted by natural order or Comparator; floorKey/ceilingKey</td></tr>
+
+              <tr><td>PriorityQueue</td><td>Object[] binary heap</td><td>O(1) peek</td><td>O(log n)</td><td>Min-heap by default; custom: new PQ&lt;&gt;(Comparator.reverseOrder())</td></tr>
+
+              <tr><td>ArrayDeque</td><td>Circular Object[] array</td><td>O(1)</td><td>O(1)amort</td><td>Preferred over LinkedList for stack/queue; no null allowed</td></tr>
+
+            </table>
+
+          </div>
+
+          <div class="topic-sections" style="margin-top:16px">
+
+            <div class="topic-section">
+
+              <h4>HashMap Deep Dive</h4>
+
+              <ul>
+
+                <li>hash(key) = key.hashCode() ^ (h >>> 16) — mixes high bits</li>
+
+                <li>index = (n-1) &amp; hash — why n must be power of 2</li>
+
+                <li>Java 8+: bucket with &gt;=8 entries → treeify to RB tree</li>
+
+                <li>Java 8+: resize doubles table; re-hashes all entries</li>
+
+                <li>ConcurrentHashMap: 16 segment locks → one lock per bin (Java 8+)</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Fail-Fast vs Fail-Safe</h4>
+
+              <ul>
+
+                <li>ArrayList/HashMap iterators: fail-fast (modCount check → CME)</li>
+
+                <li>CopyOnWriteArrayList: fail-safe (iterates snapshot copy)</li>
+
+                <li>ConcurrentHashMap iterator: weakly consistent, no CME</li>
+
+                <li>Use removeIf() or Iterator.remove() to avoid CME</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+          <div class="problems-list">
+
+            <h4>Must-Solve Problems</h4>
+
+            <div class="prob-row"><span class="prob-num">P1</span><span class="prob-name">LRU Cache (LinkedHashMap or Doubly LL + HashMap)</span><span class="prob-src src-lc">LC #146</span></div>
+
+            <div class="prob-row"><span class="prob-num">P2</span><span class="prob-name">Top K Frequent Elements (PriorityQueue)</span><span class="prob-src src-lc">LC #347</span></div>
+
+            <div class="prob-row"><span class="prob-num">P3</span><span class="prob-name">Time Based Key-Value Store (TreeMap.floorKey)</span><span class="prob-src src-lc">LC #981</span></div>
+
+            <div class="prob-row"><span class="prob-num">P4</span><span class="prob-name">Sliding Window Maximum (ArrayDeque monotonic)</span><span class="prob-src src-lc">LC #239</span></div>
+
+            <div class="prob-row"><span class="prob-num">P5</span><span class="prob-name">Design caching layer for API gateway (microservice)</span><span class="prob-src src-ms">SYS</span></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- T6: Concurrency -->
+
+      <div class="topic-card" data-id="t6">
+
+        <div class="topic-header" onclick="toggleTopic(this)">
+
+          <span class="topic-num">10</span>
+
+          <div class="topic-icon" style="background:rgba(251,191,36,0.1)">⚡</div>
+
+          <div class="topic-title">
+
+            <h3>Concurrency for DSA &amp; Microservices</h3>
+
+            <span>volatile · synchronized · ReentrantLock · CompletableFuture · Virtual Threads JDK 21</span>
+
+          </div>
+
+          <div class="topic-meta">
+
+            <span class="difficulty diff-hard">CRITICAL</span>
+
+            <button class="check-btn" onclick="markDone(event, this)">✓</button>
+
+            <span class="chevron">▼</span>
+
+          </div>
+
+        </div>
+
+        <div class="topic-body">
+
+          <div class="topic-sections">
+
+            <div class="topic-section">
+
+              <h4>Java Memory Model Basics</h4>
+
+              <ul>
+
+                <li>happens-before: write X then read X in different thread</li>
+
+                <li>volatile: visibility guarantee + prevents reordering; no atomicity</li>
+
+                <li>synchronized: mutual exclusion + happens-before guarantee</li>
+
+                <li>AtomicInteger: CAS loop, lock-free, better than sync for counters</li>
+
+                <li>StampedLock: optimistic read, better than RW lock for read-heavy</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Virtual Threads (JDK 21)</h4>
+
+              <ul>
+
+                <li>Thread.ofVirtual().start(() -&gt; task) — millions of VT possible</li>
+
+                <li>VT pins to carrier thread on synchronized block — use ReentrantLock</li>
+
+                <li>Perfect for I/O-bound microservices: Spring Boot 3.2 + VT</li>
+
+                <li>ThreadLocal works, but InheritableTL has issues with VT pooling</li>
+
+                <li>Structured concurrency: StructuredTaskScope (JDK 21 preview)</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>CompletableFuture Patterns</h4>
+
+              <ul>
+
+                <li>thenCompose: sequential async (flatMap for futures)</li>
+
+                <li>thenCombine: parallel async, combine two results</li>
+
+                <li>allOf: wait for all; anyOf: first to complete</li>
+
+                <li>exceptionally: error handling in async chain</li>
+
+                <li>Use custom Executor, never default ForkJoinPool for blocking ops</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+          <div class="problems-list">
+
+            <h4>Practice Problems</h4>
+
+            <div class="prob-row"><span class="prob-num">P1</span><span class="prob-name">Design Thread Safe Blocking Queue</span><span class="prob-src src-ms">INT</span></div>
+
+            <div class="prob-row"><span class="prob-num">P2</span><span class="prob-name">Print in Order (3 threads, synchronized)</span><span class="prob-src src-lc">LC #1114</span></div>
+
+            <div class="prob-row"><span class="prob-num">P3</span><span class="prob-name">Web Crawler Multithreaded</span><span class="prob-src src-lc">LC #1242</span></div>
+
+            <div class="prob-row"><span class="prob-num">P4</span><span class="prob-name">Design parallel API aggregator using CompletableFuture</span><span class="prob-src src-ms">PROD</span></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- T7: Lambdas & Streams -->
+
+      <div class="topic-card" data-id="t7">
+
+        <div class="topic-header" onclick="toggleTopic(this)">
+
+          <span class="topic-num">11</span>
+
+          <div class="topic-icon" style="background:rgba(0,153,255,0.1)">🌊</div>
+
+          <div class="topic-title">
+
+            <h3>Lambdas &amp; Streams Internals</h3>
+
+            <span>Functional interfaces · Lazy evaluation · Parallel streams · Spliterator</span>
+
+          </div>
+
+          <div class="topic-meta">
+
+            <span class="difficulty diff-med">MED</span>
+
+            <button class="check-btn" onclick="markDone(event, this)">✓</button>
+
+            <span class="chevron">▼</span>
+
+          </div>
+
+        </div>
+
+        <div class="topic-body">
+
+          <div class="topic-sections">
+
+            <div class="topic-section">
+
+              <h4>Lambda Internals</h4>
+
+              <ul>
+
+                <li>Lambdas compile to invokedynamic (LambdaMetafactory at runtime)</li>
+
+                <li>Non-capturing lambda: single instance (stateless singleton)</li>
+
+                <li>Capturing lambda: creates new object per call — watch in loops</li>
+
+                <li>Method refs are faster than lambdas in some JVM implementations</li>
+
+                <li>@FunctionalInterface enforces exactly one abstract method</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Stream Pipeline</h4>
+
+              <ul>
+
+                <li>Lazy: intermediate ops build pipeline, terminal triggers execution</li>
+
+                <li>Short-circuit: findFirst(), anyMatch() stop early</li>
+
+                <li>Stream reuse: IllegalStateException after terminal op</li>
+
+                <li>Spliterator: enables parallel splitting of source data</li>
+
+                <li>parallel(): uses ForkJoinPool.commonPool() — be careful with blocking ops</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>DSA with Streams (Interview Style)</h4>
+
+              <ul>
+
+                <li>Collectors.groupingBy() for frequency maps</li>
+
+                <li>Collectors.toMap() for index-to-value maps</li>
+
+                <li>IntStream.range(0,n) for index-based loops</li>
+
+                <li>Stream.iterate() for infinite sequence generation</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+    </div><!-- end p0-topics -->
+
+
+
+    <div class="callout callout-success" style="margin-top:24px">
+
+      <span class="ci">✓</span>
+
+      <span><strong>Phase 0 Completion Goal:</strong> You should be able to explain any of these topics at the bytecode / JVM internals level during a senior SDE interview without hesitation. All 13 topics listed in the original roadmap — OOP, Generics, Exception handling, GC tuning, Arrays, Enums/Records/Sealed classes — follow the same deep-dive pattern.</span>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ PHASE 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+
+  <div class="phase-content" id="phase-1">
+
+    <div class="phase-header">
+
+      <div class="phase-num">01</div>
+
+      <div class="phase-meta">
+
+        <h2>Core DSA in Java</h2>
+
+        <p>14 essential DSA topics with Java-specific implementation tricks, TLE pitfalls versus C++, and optimized templates for competitive programming and product interviews.</p>
+
+        <div class="phase-tags">
+
+          <span class="tag tag-yellow">6–8 Weeks</span>
+
+          <span class="tag tag-blue">LeetCode Medium/Hard</span>
+
+          <span class="tag tag-orange">Codeforces 1400–2000</span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="topics-grid">
+
+
+
+      <!-- Arrays & Hashing -->
+
+      <div class="topic-card" data-id="d1">
+
+        <div class="topic-header" onclick="toggleTopic(this)">
+
+          <span class="topic-num">01</span>
+
+          <div class="topic-icon" style="background:rgba(0,212,170,0.1)">📊</div>
+
+          <div class="topic-title">
+
+            <h3>Arrays &amp; Hashing</h3>
+
+            <span>Frequency maps · Counting · Prefix sums · Java-specific patterns</span>
+
+          </div>
+
+          <div class="topic-meta">
+
+            <span class="difficulty diff-easy">ENTRY</span>
+
+            <button class="check-btn" onclick="markDone(event, this)">✓</button>
+
+            <span class="chevron">▼</span>
+
+          </div>
+
+        </div>
+
+        <div class="topic-body">
+
+          <div class="topic-sections">
+
+            <div class="topic-section">
+
+              <h4>Java-Specific Tricks</h4>
+
+              <ul>
+
+                <li>int[] freq = new int[26] over HashMap when keys are chars</li>
+
+                <li>Arrays.sort() = dual-pivot quicksort for primitives; timsort for objects</li>
+
+                <li>Arrays.fill(dp, Integer.MAX_VALUE) for DP initialization</li>
+
+                <li>System.arraycopy() faster than manual loop copy</li>
+
+                <li>getOrDefault() to avoid null checks in frequency maps</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>TLE Traps vs C++</h4>
+
+              <ul>
+
+                <li>HashMap is 3–5x slower than C++ unordered_map</li>
+
+                <li>For small key ranges (0–1000), use int[] array instead</li>
+
+                <li>Scanner is 10x slower than BufferedReader for large inputs</li>
+
+                <li>Always use FastReader template in competitive programming</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+          <div class="problems-list">
+
+            <h4>Essential Problems</h4>
+
+            <div class="prob-row"><span class="prob-num">P1</span><span class="prob-name">Two Sum</span><span class="prob-src src-lc">LC #1</span></div>
+
+            <div class="prob-row"><span class="prob-num">P2</span><span class="prob-name">Product of Array Except Self</span><span class="prob-src src-lc">LC #238</span></div>
+
+            <div class="prob-row"><span class="prob-num">P3</span><span class="prob-name">Longest Consecutive Sequence</span><span class="prob-src src-lc">LC #128</span></div>
+
+            <div class="prob-row"><span class="prob-num">P4</span><span class="prob-name">Subarray Sum Equals K (prefix sum + map)</span><span class="prob-src src-lc">LC #560</span></div>
+
+            <div class="prob-row"><span class="prob-num">P5</span><span class="prob-name">Count of pairs with XOR in range</span><span class="prob-src src-cf">CF 1800</span></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Two Pointers -->
+
+      <div class="topic-card" data-id="d2">
+
+        <div class="topic-header" onclick="toggleTopic(this)">
+
+          <span class="topic-num">02</span>
+
+          <div class="topic-icon" style="background:rgba(0,153,255,0.1)">👆</div>
+
+          <div class="topic-title">
+
+            <h3>Two Pointers &amp; Sliding Window</h3>
+
+            <span>Opposite ends · Same direction · Variable window · Fixed window</span>
+
+          </div>
+
+          <div class="topic-meta">
+
+            <span class="difficulty diff-med">MED</span>
+
+            <button class="check-btn" onclick="markDone(event, this)">✓</button>
+
+            <span class="chevron">▼</span>
+
+          </div>
+
+        </div>
+
+        <div class="topic-body">
+
+          <div class="topic-sections">
+
+            <div class="topic-section">
+
+              <h4>Pattern Recognition</h4>
+
+              <ul>
+
+                <li>Sorted array + find pair → opposite ends two pointer</li>
+
+                <li>Substring with constraint → variable sliding window</li>
+
+                <li>Linked list cycle/middle → fast &amp; slow pointer</li>
+
+                <li>Remove duplicates in-place → write pointer pattern</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Sliding Window Template</h4>
+
+              <ul>
+
+                <li>Expand right: add s.charAt(r) to window</li>
+
+                <li>Shrink left: while window invalid, remove s.charAt(l++)</li>
+
+                <li>Track result: update answer after valid window check</li>
+
+                <li>Use int[128] or int[256] for character frequency array</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+          <div class="problems-list">
+
+            <h4>Essential Problems</h4>
+
+            <div class="prob-row"><span class="prob-num">P1</span><span class="prob-name">Container With Most Water</span><span class="prob-src src-lc">LC #11</span></div>
+
+            <div class="prob-row"><span class="prob-num">P2</span><span class="prob-name">Minimum Window Substring</span><span class="prob-src src-lc">LC #76</span></div>
+
+            <div class="prob-row"><span class="prob-num">P3</span><span class="prob-name">Longest Repeating Character Replacement</span><span class="prob-src src-lc">LC #424</span></div>
+
+            <div class="prob-row"><span class="prob-num">P4</span><span class="prob-name">Trapping Rain Water</span><span class="prob-src src-lc">LC #42</span></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Binary Search -->
+
+      <div class="topic-card" data-id="d3">
+
+        <div class="topic-header" onclick="toggleTopic(this)">
+
+          <span class="topic-num">05</span>
+
+          <div class="topic-icon" style="background:rgba(255,107,53,0.1)">🔍</div>
+
+          <div class="topic-title">
+
+            <h3>Binary Search (All Variants)</h3>
+
+            <span>Standard · Left/Right bound · On answer · Custom comparators</span>
+
+          </div>
+
+          <div class="topic-meta">
+
+            <span class="difficulty diff-med">MED</span>
+
+            <button class="check-btn" onclick="markDone(event, this)">✓</button>
+
+            <span class="chevron">▼</span>
+
+          </div>
+
+        </div>
+
+        <div class="topic-body">
+
+          <div class="topic-sections">
+
+            <div class="topic-section">
+
+              <h4>3 Templates to Master</h4>
+
+              <ul>
+
+                <li>T1 — exact search: while(l&lt;=r) mid=(l+r)/2</li>
+
+                <li>T2 — left bound: while(l&lt;r) shrink right when valid</li>
+
+                <li>T3 — right bound: while(l&lt;r) shrink left when valid</li>
+
+                <li>Binary search on answer: can(mid) check function pattern</li>
+
+                <li>Overflow safe mid: l + (r-l)/2 always!</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Java Specific</h4>
+
+              <ul>
+
+                <li>Arrays.binarySearch(arr, key) — returns index or -(insertion point)-1</li>
+
+                <li>Collections.binarySearch(list, key) — same semantics</li>
+
+                <li>TreeMap.floorKey(k) / ceilingKey(k) = binary search on BST</li>
+
+                <li>Custom: Arrays.sort(arr, Comparator) + binarySearch with same Comparator</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+          <div class="problems-list">
+
+            <h4>Must-Solve</h4>
+
+            <div class="prob-row"><span class="prob-num">P1</span><span class="prob-name">Search in Rotated Sorted Array</span><span class="prob-src src-lc">LC #33</span></div>
+
+            <div class="prob-row"><span class="prob-num">P2</span><span class="prob-name">Find Minimum in Rotated Array</span><span class="prob-src src-lc">LC #153</span></div>
+
+            <div class="prob-row"><span class="prob-num">P3</span><span class="prob-name">Koko Eating Bananas (BS on answer)</span><span class="prob-src src-lc">LC #875</span></div>
+
+            <div class="prob-row"><span class="prob-num">P4</span><span class="prob-name">Median of Two Sorted Arrays</span><span class="prob-src src-lc">LC #4</span></div>
+
+            <div class="prob-row"><span class="prob-num">P5</span><span class="prob-name">Split Array Largest Sum</span><span class="prob-src src-lc">LC #410</span></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Graphs -->
+
+      <div class="topic-card" data-id="d10">
+
+        <div class="topic-header" onclick="toggleTopic(this)">
+
+          <span class="topic-num">10</span>
+
+          <div class="topic-icon" style="background:rgba(168,85,247,0.1)">🕸️</div>
+
+          <div class="topic-title">
+
+            <h3>Graphs — BFS · DFS · Dijkstra · Union-Find</h3>
+
+            <span>Adjacency list · Topological sort · Path compression · Rank union</span>
+
+          </div>
+
+          <div class="topic-meta">
+
+            <span class="difficulty diff-hard">HARD</span>
+
+            <button class="check-btn" onclick="markDone(event, this)">✓</button>
+
+            <span class="chevron">▼</span>
+
+          </div>
+
+        </div>
+
+        <div class="topic-body">
+
+          <div class="topic-sections">
+
+            <div class="topic-section">
+
+              <h4>Java Graph Representation</h4>
+
+              <ul>
+
+                <li>Adjacency list: List&lt;List&lt;int[]&gt;&gt; adj = new ArrayList()</li>
+
+                <li>Weighted: int[][] edges or List&lt;int[]&gt; per node</li>
+
+                <li>BFS: ArrayDeque (faster than LinkedList) as queue</li>
+
+                <li>DFS: recursive (watch stack overflow for n&gt;10^4) or iterative</li>
+
+                <li>Visited: boolean[] vis or int[] dist initialized to -1</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Dijkstra in Java</h4>
+
+              <ul>
+
+                <li>PriorityQueue&lt;int[]&gt; pq sorted by distance</li>
+
+                <li>Always check if dist[node] &lt; current to skip stale entries</li>
+
+                <li>O((V+E) log V) with binary heap PQ</li>
+
+                <li>Negative weights → Bellman-Ford (no Dijkstra!)</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Union-Find (DSU)</h4>
+
+              <ul>
+
+                <li>Path compression: parent[x] = find(parent[x]) in find()</li>
+
+                <li>Union by rank: attach smaller rank tree under larger</li>
+
+                <li>Nearly O(α(n)) ≈ O(1) per operation</li>
+
+                <li>Track connected components count with a variable</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+          <div class="problems-list">
+
+            <h4>Essential Problems</h4>
+
+            <div class="prob-row"><span class="prob-num">P1</span><span class="prob-name">Number of Islands (DFS/BFS)</span><span class="prob-src src-lc">LC #200</span></div>
+
+            <div class="prob-row"><span class="prob-num">P2</span><span class="prob-name">Course Schedule II (Topological Sort)</span><span class="prob-src src-lc">LC #210</span></div>
+
+            <div class="prob-row"><span class="prob-num">P3</span><span class="prob-name">Network Delay Time (Dijkstra)</span><span class="prob-src src-lc">LC #743</span></div>
+
+            <div class="prob-row"><span class="prob-num">P4</span><span class="prob-name">Redundant Connection (DSU)</span><span class="prob-src src-lc">LC #684</span></div>
+
+            <div class="prob-row"><span class="prob-num">P5</span><span class="prob-name">Word Ladder II (BFS + backtrack)</span><span class="prob-src src-lc">LC #126</span></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Dynamic Programming -->
+
+      <div class="topic-card" data-id="d11">
+
+        <div class="topic-header" onclick="toggleTopic(this)">
+
+          <span class="topic-num">11</span>
+
+          <div class="topic-icon" style="background:rgba(0,212,170,0.1)">🧠</div>
+
+          <div class="topic-title">
+
+            <h3>Dynamic Programming</h3>
+
+            <span>1D · 2D · State transitions · Space optimization · Bitmask DP</span>
+
+          </div>
+
+          <div class="topic-meta">
+
+            <span class="difficulty diff-hard">HARD</span>
+
+            <button class="check-btn" onclick="markDone(event, this)">✓</button>
+
+            <span class="chevron">▼</span>
+
+          </div>
+
+        </div>
+
+        <div class="topic-body">
+
+          <div class="topic-sections">
+
+            <div class="topic-section">
+
+              <h4>DP Framework</h4>
+
+              <ul>
+
+                <li>1. Define state: dp[i] = "optimal value considering first i items"</li>
+
+                <li>2. Recurrence: dp[i] = f(dp[i-1], dp[i-2], ...)</li>
+
+                <li>3. Base case: dp[0] or dp[1]</li>
+
+                <li>4. Order: bottom-up (tabulation) preferred in Java — no stack overflow</li>
+
+                <li>5. Space optimize: keep only last 1 or 2 rows when possible</li>
+
+              </ul>
+
+            </div>
+
+            <div class="topic-section">
+
+              <h4>Java-Specific DP</h4>
+
+              <ul>
+
+                <li>int vs long: use long when n &gt; 10^4 and accumulating sums</li>
+
+                <li>Memoization: HashMap&lt;String, Long&gt; for complex states</li>
+
+                <li>For Bitmask DP: int[] dp = new int[1&lt;&lt;n]</li>
+
+                <li>2D array: int[][] dp = new int[n+1][m+1] — declare once</li>
+
+                <li>Arrays.fill() for initialization; careful with Integer.MIN_VALUE+1</li>
+
+              </ul>
+
+            </div>
+
+          </div>
+
+          <div class="problems-list">
+
+            <h4>Must-Solve (By Category)</h4>
+
+            <div class="prob-row"><span class="prob-num">1D</span><span class="prob-name">Climbing Stairs / House Robber / Jump Game II</span><span class="prob-src src-lc">LC #70/#198/#45</span></div>
+
+            <div class="prob-row"><span class="prob-num">2D</span><span class="prob-name">Longest Common Subsequence / Edit Distance</span><span class="prob-src src-lc">LC #1143/#72</span></div>
+
+            <div class="prob-row"><span class="prob-num">KS</span><span class="prob-name">0/1 Knapsack / Unbounded Knapsack / Coin Change</span><span class="prob-src src-lc">LC #322/#518</span></div>
+
+            <div class="prob-row"><span class="prob-num">INT</span><span class="prob-name">Burst Balloons / Matrix Chain Multiplication</span><span class="prob-src src-lc">LC #312</span></div>
+
+            <div class="prob-row"><span class="prob-num">BM</span><span class="prob-name">Travelling Salesman (Bitmask DP)</span><span class="prob-src src-cf">CF 2000</span></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+    </div><!-- end phase-1 topics -->
+
+
+
+    <div class="callout callout-info" style="margin-top:24px">
+
+      <span class="ci">ℹ</span>
+
+      <span><strong>Phase 1 also covers:</strong> Linked Lists, Stacks &amp; Queues (monotonic stack), Trees &amp; BSTs, Heaps, Greedy + Bit Manipulation, Trie, Segment Tree / Fenwick Tree. Each follows the same card structure above. Complete all 14 DSA categories in 6–8 weeks with 5–7 problems each.</span>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ PHASE 2 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+
+  <div class="phase-content" id="phase-2">
+
+    <div class="phase-header">
+
+      <div class="phase-num">02</div>
+
+      <div class="phase-meta">
+
+        <h2>Advanced + Interview-Ready</h2>
+
+        <p>System design combined with DSA, mock interview questions from 2025–2026 rounds, and weekly contest strategy for Codeforces + LeetCode.</p>
+
+        <div class="phase-tags">
+
+          <span class="tag tag-yellow">3–4 Weeks</span>
+
+          <span class="tag tag-orange">Mock Interviews</span>
+
+          <span class="tag tag-purple">Contest Strategy</span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="section-title">// 2025–2026 Interview Questions by Company</div>
+
+
+
+    <div class="table-wrap">
+
+      <table>
+
+        <tr><th>Company</th><th>Level</th><th>Recent Question</th><th>Core Concept</th></tr>
+
+        <tr><td>Google</td><td>L4/L5</td><td>Design a rate limiter supporting 1M req/s</td><td>Sliding window log + Redis sorted sets</td></tr>
+
+        <tr><td>Amazon</td><td>SDE-2</td><td>Minimum cost to connect ropes</td><td>Min Heap / Greedy</td></tr>
+
+        <tr><td>Microsoft</td><td>SDE-2</td><td>Design autocomplete for IDE</td><td>Trie + Top-K with PriorityQueue</td></tr>
+
+        <tr><td>Atlassian</td><td>SDE-2</td><td>Find all critical connections in a network</td><td>Bridges — Tarjan's DFS</td></tr>
+
+        <tr><td>Adobe</td><td>SDE-2</td><td>Serialize and deserialize N-ary tree</td><td>DFS + StringBuilder serialization</td></tr>
+
+        <tr><td>Goldman Sachs</td><td>SDE-3</td><td>Stock price stream: median in real time</td><td>Two heaps (max + min)</td></tr>
+
+        <tr><td>Flipkart</td><td>SDE-2</td><td>Design consistent hashing for cache nodes</td><td>TreeMap.ceilingKey for ring</td></tr>
+
+        <tr><td>Uber</td><td>SDE-2</td><td>Nearest driver to rider (geo-spatial)</td><td>Quadtree / BFS on grid</td></tr>
+
+      </table>
+
+    </div>
+
+
+
+    <div class="section-title">// Weekly Contest Strategy</div>
+
+    <div class="schedule-grid">
+
+      <div class="week-card w1">
+
+        <div class="week-num">Weekday Routine</div>
+
+        <h3>Daily Practice</h3>
+
+        <ul>
+
+          <li>2 LeetCode problems (60 min max)</li>
+
+          <li>1 Codeforces problem target rating</li>
+
+          <li>Review failed problems next day</li>
+
+          <li>Tag weak areas weekly</li>
+
+        </ul>
+
+      </div>
+
+      <div class="week-card w2">
+
+        <div class="week-num">Saturday</div>
+
+        <h3>Mock Interview Day</h3>
+
+        <ul>
+
+          <li>1 full mock (90 min, timed)</li>
+
+          <li>Solve on paper/whiteboard first</li>
+
+          <li>Then code + optimize + analyze</li>
+
+          <li>Pramp / Interviewing.io</li>
+
+        </ul>
+
+      </div>
+
+      <div class="week-card w3">
+
+        <div class="week-num">Sunday</div>
+
+        <h3>Contest Day</h3>
+
+        <ul>
+
+          <li>LeetCode Weekly Contest</li>
+
+          <li>Codeforces Div 2 or Div 3</li>
+
+          <li>Aim: solve 3/4 or A+B+C in CF</li>
+
+          <li>Upsolve Monday morning</li>
+
+        </ul>
+
+      </div>
+
+      <div class="week-card w4">
+
+        <div class="week-num">Monthly</div>
+
+        <h3>System Design</h3>
+
+        <ul>
+
+          <li>1 full system design (2 hrs)</li>
+
+          <li>DSA + design combined problem</li>
+
+          <li>Review Codeforces rating growth</li>
+
+          <li>Update weak topic list</li>
+
+        </ul>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="section-title">// Codeforces Rating Progression</div>
+
+    <div class="table-wrap">
+
+      <table>
+
+        <tr><th>Target Rating</th><th>Focus</th><th>Typical Problems</th><th>Est. Time</th></tr>
+
+        <tr><td style="color:var(--green)">800–1200</td><td>Basic implementation, brute force</td><td>Array manipulation, greedy basics</td><td>Week 1–2</td></tr>
+
+        <tr><td style="color:var(--accent2)">1200–1600</td><td>Binary search, sorting, prefix sums</td><td>Two pointers, simple DP</td><td>Week 3–5</td></tr>
+
+        <tr><td style="color:var(--warn)">1600–1900</td><td>Graph algorithms, medium DP</td><td>Dijkstra, DSU, bitmask DP</td><td>Week 6–10</td></tr>
+
+        <tr><td style="color:var(--accent3)">1900–2200</td><td>Advanced DP, segment tree, complex graphs</td><td>DP with bitmasking, Fenwick tree</td><td>Week 11–16</td></tr>
+
+      </table>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ TEMPLATES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+
+  <div class="phase-content" id="phase-3">
+
+    <div class="phase-header">
+
+      <div class="phase-num">Tmpl</div>
+
+      <div class="phase-meta">
+
+        <h2>Java Competitive Programming Templates</h2>
+
+        <p>Production-grade, TLE-free templates to keep in your IDE. Use these from day one of Phase 1.</p>
+
+        <div class="phase-tags">
+
+          <span class="tag tag-green">Copy-Paste Ready</span>
+
+          <span class="tag tag-blue">Java 17+</span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="template-card">
+
+      <div class="template-header">
+
+        <div class="template-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+
+        <span class="template-name">FastReader.java — 10x faster than Scanner</span>
+
+      </div>
+
+      <div class="template-body"><span class="kw">static class</span> <span class="cls">FastReader</span> {
+
+    <span class="cls">BufferedReader</span> br = <span class="kw">new</span> <span class="cls">BufferedReader</span>(<span class="kw">new</span> <span class="cls">InputStreamReader</span>(<span class="cls">System</span>.in));
+
+    <span class="cls">StringTokenizer</span> st;
+
+
+
+    <span class="cls">String</span> next() {
+
+        <span class="kw">while</span> (st == <span class="kw">null</span> || !st.hasMoreTokens()) {
+
+            <span class="kw">try</span> { st = <span class="kw">new</span> <span class="cls">StringTokenizer</span>(br.readLine()); }
+
+            <span class="kw">catch</span> (<span class="cls">IOException</span> e) { <span class="kw">throw new</span> <span class="cls">RuntimeException</span>(e); }
+
+        }
+
+        <span class="kw">return</span> st.nextToken();
+
+    }
+
+    <span class="kw">int</span> nextInt() { <span class="kw">return</span> <span class="cls">Integer</span>.parseInt(next()); }
+
+    <span class="kw">long</span> nextLong() { <span class="kw">return</span> <span class="cls">Long</span>.parseLong(next()); }
+
+    <span class="cls">String</span> nextLine() {
+
+        <span class="kw">try</span> { <span class="kw">return</span> br.readLine(); }
+
+        <span class="kw">catch</span> (<span class="cls">IOException</span> e) { <span class="kw">throw new</span> <span class="cls">RuntimeException</span>(e); }
+
+    }
+
+}</div>
+
+    </div>
+
+
+
+    <div class="template-card">
+
+      <div class="template-header">
+
+        <div class="template-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+
+        <span class="template-name">DSU.java — Union-Find with Path Compression + Rank</span>
+
+      </div>
+
+      <div class="template-body"><span class="kw">static int</span>[] parent, rank;
+
+<span class="kw">static int</span> components;
+
+
+
+<span class="kw">static void</span> <span class="cls">init</span>(<span class="kw">int</span> n) {
+
+    parent = <span class="kw">new int</span>[n]; rank = <span class="kw">new int</span>[n];
+
+    components = n;
+
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) parent[i] = i;
+
+}
+
+<span class="kw">static int</span> <span class="cls">find</span>(<span class="kw">int</span> x) {
+
+    <span class="kw">if</span> (parent[x] != x) parent[x] = <span class="cls">find</span>(parent[x]); <span class="cm">// path compression</span>
+
+    <span class="kw">return</span> parent[x];
+
+}
+
+<span class="kw">static boolean</span> <span class="cls">union</span>(<span class="kw">int</span> a, <span class="kw">int</span> b) {
+
+    <span class="kw">int</span> ra = <span class="cls">find</span>(a), rb = <span class="cls">find</span>(b);
+
+    <span class="kw">if</span> (ra == rb) <span class="kw">return false</span>;
+
+    <span class="kw">if</span> (rank[ra] &lt; rank[rb]) { <span class="kw">int</span> t = ra; ra = rb; rb = t; }
+
+    parent[rb] = ra;
+
+    <span class="kw">if</span> (rank[ra] == rank[rb]) rank[ra]++;
+
+    components--;
+
+    <span class="kw">return true</span>;
+
+}</div>
+
+    </div>
+
+
+
+    <div class="template-card">
+
+      <div class="template-header">
+
+        <div class="template-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+
+        <span class="template-name">FenwickTree.java — Binary Indexed Tree (BIT)</span>
+
+      </div>
+
+      <div class="template-body"><span class="kw">static int</span>[] bit;
+
+<span class="kw">static int</span> N;
+
+
+
+<span class="kw">static void</span> <span class="cls">update</span>(<span class="kw">int</span> i, <span class="kw">int</span> delta) { <span class="cm">// 1-indexed</span>
+
+    <span class="kw">for</span> (; i &lt;= N; i += i &amp; (-i)) bit[i] += delta;
+
+}
+
+<span class="kw">static int</span> <span class="cls">query</span>(<span class="kw">int</span> i) { <span class="cm">// prefix sum [1..i]</span>
+
+    <span class="kw">int</span> s = <span class="num">0</span>;
+
+    <span class="kw">for</span> (; i &gt; <span class="num">0</span>; i -= i &amp; (-i)) s += bit[i];
+
+    <span class="kw">return</span> s;
+
+}
+
+<span class="kw">static int</span> <span class="cls">range</span>(<span class="kw">int</span> l, <span class="kw">int</span> r) { <span class="cm">// sum [l..r]</span>
+
+    <span class="kw">return</span> <span class="cls">query</span>(r) - <span class="cls">query</span>(l - <span class="num">1</span>);
+
+}</div>
+
+    </div>
+
+
+
+    <div class="template-card">
+
+      <div class="template-header">
+
+        <div class="template-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+
+        <span class="template-name">SegTree.java — Segment Tree (Range Sum + Point Update)</span>
+
+      </div>
+
+      <div class="template-body"><span class="kw">static long</span>[] tree;
+
+<span class="kw">static int</span> N;
+
+
+
+<span class="kw">static void</span> <span class="cls">build</span>(<span class="kw">int</span>[] arr, <span class="kw">int</span> node, <span class="kw">int</span> start, <span class="kw">int</span> end) {
+
+    <span class="kw">if</span> (start == end) { tree[node] = arr[start]; <span class="kw">return</span>; }
+
+    <span class="kw">int</span> mid = (start + end) / <span class="num">2</span>;
+
+    <span class="cls">build</span>(arr, <span class="num">2</span>*node, start, mid);
+
+    <span class="cls">build</span>(arr, <span class="num">2</span>*node+<span class="num">1</span>, mid+<span class="num">1</span>, end);
+
+    tree[node] = tree[<span class="num">2</span>*node] + tree[<span class="num">2</span>*node+<span class="num">1</span>];
+
+}
+
+<span class="kw">static void</span> <span class="cls">update</span>(<span class="kw">int</span> node, <span class="kw">int</span> start, <span class="kw">int</span> end, <span class="kw">int</span> idx, <span class="kw">int</span> val) {
+
+    <span class="kw">if</span> (start == end) { tree[node] = val; <span class="kw">return</span>; }
+
+    <span class="kw">int</span> mid = (start + end) / <span class="num">2</span>;
+
+    <span class="kw">if</span> (idx &lt;= mid) <span class="cls">update</span>(<span class="num">2</span>*node, start, mid, idx, val);
+
+    <span class="kw">else</span>           <span class="cls">update</span>(<span class="num">2</span>*node+<span class="num">1</span>, mid+<span class="num">1</span>, end, idx, val);
+
+    tree[node] = tree[<span class="num">2</span>*node] + tree[<span class="num">2</span>*node+<span class="num">1</span>];
+
+}
+
+<span class="kw">static long</span> <span class="cls">query</span>(<span class="kw">int</span> node, <span class="kw">int</span> start, <span class="kw">int</span> end, <span class="kw">int</span> l, <span class="kw">int</span> r) {
+
+    <span class="kw">if</span> (r &lt; start || end &lt; l) <span class="kw">return</span> <span class="num">0</span>;
+
+    <span class="kw">if</span> (l &lt;= start &amp;&amp; end &lt;= r) <span class="kw">return</span> tree[node];
+
+    <span class="kw">int</span> mid = (start + end) / <span class="num">2</span>;
+
+    <span class="kw">return</span> <span class="cls">query</span>(<span class="num">2</span>*node, start, mid, l, r)
+
+         + <span class="cls">query</span>(<span class="num">2</span>*node+<span class="num">1</span>, mid+<span class="num">1</span>, end, l, r);
+
+}</div>
+
+    </div>
+
+
+
+    <div class="template-card">
+
+      <div class="template-header">
+
+        <div class="template-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+
+        <span class="template-name">Dijkstra.java — Shortest Path Template</span>
+
+      </div>
+
+      <div class="template-body"><span class="kw">static int</span>[] <span class="cls">dijkstra</span>(<span class="cls">List</span>&lt;<span class="kw">int</span>[]&gt;[] graph, <span class="kw">int</span> src, <span class="kw">int</span> n) {
+
+    <span class="kw">int</span>[] dist = <span class="kw">new int</span>[n];
+
+    <span class="cls">Arrays</span>.fill(dist, <span class="cls">Integer</span>.MAX_VALUE);
+
+    dist[src] = <span class="num">0</span>;
+
+    <span class="cm">// PQ: [distance, node]</span>
+
+    <span class="cls">PriorityQueue</span>&lt;<span class="kw">int</span>[]&gt; pq = <span class="kw">new</span> <span class="cls">PriorityQueue</span>&lt;&gt;((a,b) -&gt; a[<span class="num">0</span>]-b[<span class="num">0</span>]);
+
+    pq.offer(<span class="kw">new int</span>[]{<span class="num">0</span>, src});
+
+
+
+    <span class="kw">while</span> (!pq.isEmpty()) {
+
+        <span class="kw">int</span>[] curr = pq.poll();
+
+        <span class="kw">int</span> d = curr[<span class="num">0</span>], u = curr[<span class="num">1</span>];
+
+        <span class="kw">if</span> (d &gt; dist[u]) <span class="kw">continue</span>; <span class="cm">// skip stale entry</span>
+
+        <span class="kw">for</span> (<span class="kw">int</span>[] e : graph[u]) {
+
+            <span class="kw">int</span> v = e[<span class="num">0</span>], w = e[<span class="num">1</span>];
+
+            <span class="kw">if</span> (dist[u] + w &lt; dist[v]) {
+
+                dist[v] = dist[u] + w;
+
+                pq.offer(<span class="kw">new int</span>[]{dist[v], v});
+
+            }
+
+        }
+
+    }
+
+    <span class="kw">return</span> dist;
+
+}</div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 30-DAY CHALLENGE ━━━━━━━━━━━━━━━━━━━━━━ -->
+
+  <div class="phase-content" id="phase-4">
+
+    <div class="phase-header">
+
+      <div class="phase-num">30D</div>
+
+      <div class="phase-meta">
+
+        <h2>30-Day Java Internals Mastery Challenge</h2>
+
+        <p>Click each day to mark it complete. One focused topic per day — deep study, not surface skimming. This is Phase 0 compressed into a single month.</p>
+
+        <div class="phase-tags">
+
+          <span class="tag tag-yellow">1 Hour/Day Min</span>
+
+          <span class="tag tag-green">Daily Commitment</span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="challenge-grid" id="challenge-grid"></div>
+
+    <div class="callout callout-info" style="margin-top:24px">
+
+      <span class="ci">ℹ</span>
+
+      <span>Progress is saved in this session. Each day: read the topic deeply, write code examples, and explain it out loud as if teaching someone. Teaching is the fastest way to internalize Java internals.</span>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ RESOURCES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+
+  <div class="phase-content" id="phase-5">
+
+    <div class="phase-header">
+
+      <div class="phase-num">Res</div>
+
+      <div class="phase-meta">
+
+        <h2>Curated Resources — Only the Best</h2>
+
+        <p>No outdated books. No paid courses that recycle YouTube content. Only what actually moves the needle for product company interviews.</p>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="resources-grid">
+
+      <div class="resource-card">
+
+        <div class="res-type">📖 Book</div>
+
+        <h3>Effective Java (3rd Ed.)</h3>
+
+        <p>Joshua Bloch's masterclass. Chapters on object creation, generics, concurrency, and serialization are interview gold. Read it alongside coding.</p>
+
+        <div class="res-rating"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+
+      </div>
+
+      <div class="resource-card">
+
+        <div class="res-type">🌐 Platform</div>
+
+        <h3>LeetCode (Premium for Meta/Google)</h3>
+
+        <p>Main grinding platform. Use the company tag filter. Focus on Medium (70%) and Hard (30%). Track solved count by topic, not just total.</p>
+
+        <div class="res-rating"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+
+      </div>
+
+      <div class="resource-card">
+
+        <div class="res-type">🌐 Platform</div>
+
+        <h3>Codeforces</h3>
+
+        <p>Best platform to develop real contest speed. Div 2 and Div 3 contests. Upsolving is mandatory — this is where actual improvement happens.</p>
+
+        <div class="res-rating"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+
+      </div>
+
+      <div class="resource-card">
+
+        <div class="res-type">📹 YouTube</div>
+
+        <h3>William Fiset — Graph Theory</h3>
+
+        <p>Best graph algorithm explanations on YouTube. Covers Dijkstra, Tarjan, network flow with proper code. Use alongside Phase 1 graph section.</p>
+
+        <div class="res-rating"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+
+      </div>
+
+      <div class="resource-card">
+
+        <div class="res-type">📹 YouTube</div>
+
+        <h3>NeetCode — LeetCode Patterns</h3>
+
+        <p>Pattern-based LeetCode explanations. NeetCode 150 is the best curated list for product company prep. Strong Java explanations.</p>
+
+        <div class="res-rating"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+
+      </div>
+
+      <div class="resource-card">
+
+        <div class="res-type">📖 Book</div>
+
+        <h3>Java Concurrency in Practice</h3>
+
+        <p>Goetz et al. The definitive reference for Java concurrency. Chapters on visibility, atomicity, and the Java memory model. Essential for SDE-3 interviews.</p>
+
+        <div class="res-rating"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+
+      </div>
+
+      <div class="resource-card">
+
+        <div class="res-type">🌐 Site</div>
+
+        <h3>cp-algorithms.com</h3>
+
+        <p>Best algorithm reference for competitive programming. Covers all advanced topics with proofs and clean implementations. Bookmark this.</p>
+
+        <div class="res-rating"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+
+      </div>
+
+      <div class="resource-card">
+
+        <div class="res-type">🛠️ Tool</div>
+
+        <h3>IntelliJ IDEA + JProfiler</h3>
+
+        <p>Use IntelliJ's bytecode viewer (Ctrl+Shift+A → "Show Bytecode") to verify your Java internals understanding. JProfiler for memory/GC analysis.</p>
+
+        <div class="res-rating"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+
+      </div>
+
+      <div class="resource-card">
+
+        <div class="res-type">📹 YouTube</div>
+
+        <h3>Gaurav Sen — System Design</h3>
+
+        <p>Phase 2 system design preparation. Start after completing Phase 1 DSA fully. Focus on the DSA+Design hybrid questions.</p>
+
+        <div class="res-rating"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">☆</span></div>
+
+      </div>
+
+      <div class="resource-card">
+
+        <div class="res-type">📖 Reference</div>
+
+        <h3>OpenJDK Source Code</h3>
+
+        <p>Read HashMap.java, ArrayList.java, String.java source directly. The comments in OpenJDK source are interview answers. Use GitHub's OpenJDK mirror.</p>
+
+        <div class="res-rating"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+
+      </div>
+
+      <div class="resource-card">
+
+        <div class="res-type">🌐 Platform</div>
+
+        <h3>Pramp / Interviewing.io</h3>
+
+        <p>Free mock interviews with real engineers. Do at least 2 mocks per week in Phase 2. Simulating interview pressure is non-negotiable.</p>
+
+        <div class="res-rating"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">☆</span></div>
+
+      </div>
+
+      <div class="resource-card">
+
+        <div class="res-type">📖 Book</div>
+
+        <h3>CLRS (Algorithms, 4th Ed.)</h3>
+
+        <p>Reference only — don't read cover-to-cover. Use for proofs and complexity analysis when you need depth on specific algorithms like Red-Black trees or network flow.</p>
+
+        <div class="res-rating"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">☆</span></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+</div><!-- end container -->
+
+
+
+<footer>
+
+  <span>// JAVA DSA × MICROSERVICES MASTERY ROADMAP — 2025</span>
+
+  <span>Built for <span class="accent">Java SDE-2/3</span> aspirants targeting product companies</span>
+
+</footer>
+
+
+
+<script>
+
+// ── DATA ──
+
+const TOTAL_TOPICS = 27;
+
+
+
+const days30 = [
+
+  {n:1, t:"JVM Arch Overview"},
+
+  {n:2, t:"Heap + Gen GC"},
+
+  {n:3, t:"Stack + Metaspace"},
+
+  {n:4, t:"TLAB + G1GC"},
+
+  {n:5, t:"Object Header"},
+
+  {n:6, t:"Escape Analysis"},
+
+  {n:7, t:"String Pool"},
+
+  {n:8, t:"String + Operator"},
+
+  {n:9, t:"split/substring src"},
+
+  {n:10, t:"StringBuilder SB"},
+
+  {n:11, t:"Autoboxing Traps"},
+
+  {n:12, t:"Integer Cache"},
+
+  {n:13, t:"Array Memory"},
+
+  {n:14, t:"System.arraycopy"},
+
+  {n:15, t:"OOP Bytecode"},
+
+  {n:16, t:"Polymorphism JVM"},
+
+  {n:17, t:"Checked Exceptions"},
+
+  {n:18, t:"try-with-resources"},
+
+  {n:19, t:"ArrayList Resize"},
+
+  {n:20, t:"HashMap Internals"},
+
+  {n:21, t:"TreeMap RB Tree"},
+
+  {n:22, t:"PriorityQueue Heap"},
+
+  {n:23, t:"Generics Erasure"},
+
+  {n:24, t:"PECS Principle"},
+
+  {n:25, t:"volatile + JMM"},
+
+  {n:26, t:"ReentrantLock"},
+
+  {n:27, t:"CompletableFuture"},
+
+  {n:28, t:"Virtual Threads"},
+
+  {n:29, t:"Streams Lazy Eval"},
+
+  {n:30, t:"GC Tuning Flags"},
+
+];
+
+
+
+const completedTopics = new Set(JSON.parse(sessionStorage.getItem('doneTopics') || '[]'));
+
+const completedDays = new Set(JSON.parse(sessionStorage.getItem('doneDays') || '[]'));
+
+
+
+// ── PHASE SWITCH ──
+
+function showPhase(idx, btn) {
+
+  document.querySelectorAll('.phase-content').forEach((el,i) => {
+
+    el.classList.toggle('active', i === idx);
+
+  });
+
+  document.querySelectorAll('.phase-tab').forEach((el,i) => {
+
+    el.classList.toggle('active', i === idx);
+
+  });
+
+}
+
+
+
+// ── TOPIC TOGGLE ──
+
+function toggleTopic(header) {
+
+  header.parentElement.classList.toggle('open');
+
+}
+
+
+
+// ── MARK DONE ──
+
+function markDone(e, btn) {
+
+  e.stopPropagation();
+
+  const card = btn.closest('.topic-card');
+
+  const id = card.dataset.id;
+
+  if (completedTopics.has(id)) {
+
+    completedTopics.delete(id);
+
+    btn.classList.remove('done');
+
+  } else {
+
+    completedTopics.add(id);
+
+    btn.classList.add('done');
+
+  }
+
+  sessionStorage.setItem('doneTopics', JSON.stringify([...completedTopics]));
+
+  updateProgress();
+
+}
+
+
+
+// ── PROGRESS ──
+
+function updateProgress() {
+
+  const done = completedTopics.size + completedDays.size;
+
+  const total = TOTAL_TOPICS;
+
+  const pct = Math.min(100, Math.round(done / total * 100));
+
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  document.getElementById('progress-text').textContent =
+
+    `${done} / ${total} topics completed (${pct}%)`;
+
+}
+
+
+
+// ── BUILD 30-DAY GRID ──
+
+function buildChallenge() {
+
+  const grid = document.getElementById('challenge-grid');
+
+  days30.forEach(d => {
+
+    const cell = document.createElement('div');
+
+    cell.className = 'day-cell' + (completedDays.has(d.n) ? ' done' : '');
+
+    cell.innerHTML = `<span class="day-num">${d.n}</span><span class="day-topic">${d.t}</span>`;
+
+    cell.onclick = () => {
+
+      const isDone = completedDays.has(d.n);
+
+      if (isDone) completedDays.delete(d.n);
+
+      else completedDays.add(d.n);
+
+      cell.classList.toggle('done', !isDone);
+
+      sessionStorage.setItem('doneDays', JSON.stringify([...completedDays]));
+
+      updateProgress();
+
+    };
+
+    grid.appendChild(cell);
+
+  });
+
+}
+
+
+
+// ── RESTORE STATE ──
+
+function restoreState() {
+
+  completedTopics.forEach(id => {
+
+    const card = document.querySelector(`[data-id="${id}"]`);
+
+    if (card) card.querySelector('.check-btn')?.classList.add('done');
+
+  });
+
+}
+
+
+
+// ── STAGGER ANIMATION ──
+
+function animateCards() {
+
+  document.querySelectorAll('.topic-card').forEach((card, i) => {
+
+    card.style.animationDelay = (i * 0.05) + 's';
+
+  });
+
+}
+
+
+
+// ── INIT ──
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  buildChallenge();
+
+  restoreState();
+
+  updateProgress();
+
+  animateCards();
+
+});
+
+</script>
+
+</body>
