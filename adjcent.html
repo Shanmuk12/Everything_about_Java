@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Java 2D Arrays — Complete Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #0d0f14;
+    --surface:  #151820;
+    --surface2: #1c2030;
+    --border:   #2a2f42;
+    --text:     #e4e8f5;
+    --muted:    #7880a0;
+    --blue:     #4f8ef7;
+    --blue-dim: #1a2d55;
+    --teal:     #2dd4a8;
+    --teal-dim: #0d3028;
+    --amber:    #f5a623;
+    --amber-dim:#3a2608;
+    --red:      #f76f6f;
+    --red-dim:  #3a1212;
+    --green:    #5fdd9d;
+    --mono:     'JetBrains Mono', monospace;
+    --display:  'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--display);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 60px 40px 40px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 50% at 70% 50%, #4f8ef714 0%, transparent 70%),
+                radial-gradient(ellipse 40% 60% at 10% 80%, #2dd4a80a 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--teal);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-size: clamp(28px, 5vw, 56px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+  .hero h1 span { color: var(--blue); }
+  .hero-sub {
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 520px;
+  }
+  .toc-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 28px;
+  }
+  .toc-pills a {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    text-decoration: none;
+    transition: all .15s;
+  }
+  .toc-pills a:hover { border-color: var(--blue); color: var(--blue); }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+  .section {
+    padding: 56px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--blue);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .section h2 {
+    font-size: clamp(20px, 3vw, 30px);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 20px;
+  }
+  .section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--teal);
+    margin: 28px 0 10px;
+  }
+  p { color: var(--muted); font-size: 14px; margin-bottom: 12px; line-height: 1.75; }
+  p strong { color: var(--text); }
+  p code { font-family: var(--mono); font-size: 12px; background: var(--surface2); padding: 2px 6px; border-radius: 4px; color: var(--amber); }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+  .code-header {
+    background: var(--surface2);
+    padding: 8px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .code-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .code-block pre {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    padding: 20px;
+    overflow-x: auto;
+    color: var(--text);
+  }
+  .c-kw  { color: #7fbfff; }
+  .c-cm  { color: #5a6480; font-style: italic; }
+  .c-num { color: var(--amber); }
+  .c-str { color: var(--teal); }
+  .c-ok  { color: var(--green); }
+  .c-err { color: var(--red); }
+
+  /* ── CARDS ── */
+  .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  @media(max-width:620px){ .card-row { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card.java { border-color: var(--blue); }
+  .card.cpp  { border-color: var(--teal); }
+  .card.valid { border-color: var(--green); }
+  .card.invalid { border-color: var(--red); }
+  .card-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .card.java .card-tag  { color: var(--blue); }
+  .card.cpp  .card-tag  { color: var(--teal); }
+  .card.valid .card-tag  { color: var(--green); }
+  .card.invalid .card-tag{ color: var(--red); }
+  .card h4 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .card p { font-size: 13px; margin-bottom: 6px; }
+
+  /* ── DIAGRAMS ── */
+  .diagram-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin: 20px 0;
+  }
+  .diagram-title {
+    background: var(--surface2);
+    padding: 10px 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .diagram-wrap svg { display: block; width: 100%; height: auto; }
+
+  /* ── RULE PILLS ── */
+  .rule {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border-radius: 10px;
+    margin: 10px 0;
+    border-left: 3px solid var(--blue);
+  }
+  .rule.amber { border-color: var(--amber); }
+  .rule.red   { border-color: var(--red); }
+  .rule.teal  { border-color: var(--teal); }
+  .rule-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .rule-text { font-size: 13px; color: var(--muted); }
+  .rule-text strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 14px; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; margin: 20px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: var(--surface2);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 10px 16px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:hover td { background: var(--surface2); }
+  .tick { color: var(--green); font-weight: 700; }
+  .cross { color: var(--red); font-weight: 700; }
+  .mono-val { font-family: var(--mono); color: var(--amber); }
+
+  /* ── MEMORY VISUAL ── */
+  .mem-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin: 6px 0;
+    flex-wrap: wrap;
+  }
+  .mem-cell {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    text-align: center;
+    min-width: 52px;
+  }
+  .mem-cell.blue   { background: var(--blue-dim);  border-color: var(--blue); color: var(--blue); }
+  .mem-cell.teal   { background: var(--teal-dim);  border-color: var(--teal); color: var(--teal); }
+  .mem-cell.amber  { background: var(--amber-dim); border-color: var(--amber);color: var(--amber); }
+  .mem-cell.ref    { background: #1a2040; border-color: #3a4070; color: #8899cc; }
+  .mem-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-right: 8px;
+    min-width: 50px;
+  }
+  .arr-sep {
+    font-size: 18px;
+    color: var(--border);
+    font-weight: 300;
+  }
+
+  /* ── STEPPER ── */
+  .stepper { margin: 20px 0; }
+  .stepper-nav {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .step-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .step-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+  .step-btn:disabled { opacity: 0.3; cursor: default; }
+  .step-counter { font-family: var(--mono); font-size: 11px; color: var(--muted); flex: 1; text-align: center; }
+  .step-panel { display: none; }
+  .step-panel.active { display: block; }
+  .step-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media(max-width:580px){ .step-body{ grid-template-columns:1fr; } }
+  .step-card {
+    border-radius: 12px;
+    padding: 18px;
+    border: 1px solid;
+  }
+  .step-card.j { background: var(--blue-dim); border-color: var(--blue); }
+  .step-card.c { background: var(--teal-dim); border-color: var(--teal); }
+  .step-card h5 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .step-card.j h5 { color: var(--blue); }
+  .step-card.c h5  { color: var(--teal); }
+  .step-card ul {
+    list-style: none;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .step-card ul li { padding: 3px 0; }
+  .step-card ul li::before { content: '→ '; color: var(--border); }
+  .step-result {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .step-result.ok  { background: #0d3028; color: var(--green); }
+  .step-result.err { background: #3a1212; color: var(--red); }
+  .step-result.warn{ background: var(--amber-dim); color: var(--amber); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 32px 40px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
+<div class="hero">
+  <div class="container">
+    <div class="hero-label">DSA Reference · Java Arrays</div>
+    <h1>2D Arrays:<br><span>Java vs C/C++</span></h1>
+    <p class="hero-sub">A complete visual reference — rows, columns, memory models, declaration rules, and why <code>int[][3]</code> behaves differently in each language.</p>
+    <div class="toc-pills">
+      <a href="#s1">Rows &amp; Cols</a>
+      <a href="#s2">Java Memory Model</a>
+      <a href="#s3">C Memory Model</a>
+      <a href="#s4">Declaration Rules</a>
+      <a href="#s5">Why int[][3] Fails in Java</a>
+      <a href="#s6">Why int[][3] Works in C</a>
+      <a href="#s7">All 4 Cases</a>
+      <a href="#s8">Jagged Arrays</a>
+      <a href="#s9">DSA Cheat Sheet</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SECTION 1 ═══════════════════════════════ -->
+<div class="section" id="s1">
+<div class="container">
+  <div class="section-num">01</div>
+  <h2>Rows &amp; Columns — What They Actually Mean</h2>
+  <p>When you write <code>arr[3][4]</code>, the <strong>first bracket is always rows</strong>, the <strong>second is always columns</strong>. A row is a complete horizontal strip; a column is a vertical slice. This is the same notation in both languages — but what those dimensions physically create in memory is completely different.</p>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">// A 3×4 grid — 3 rows, 4 columns</div>
+    <svg viewBox="0 0 640 260">
+      <!-- Column headers -->
+      <text x="175" y="30" text-anchor="middle" fill="#5fdd9d" font-size="12" font-family="'JetBrains Mono',monospace">col 0</text>
+      <text x="280" y="30" text-anchor="middle" fill="#5fdd9d" font-size="12" font-family="'JetBrains Mono',monospace">col 1</text>
+      <text x="385" y="30" text-anchor="middle" fill="#5fdd9d" font-size="12" font-family="'JetBrains Mono',monospace">col 2</text>
+      <text x="490" y="30" text-anchor="middle" fill="#5fdd9d" font-size="12" font-family="'JetBrains Mono',monospace">col 3</text>
+      <!-- col arrow -->
+      <line x1="490" y1="42" x2="490" y2="210" stroke="#5fdd9d" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ga)"/>
+      <defs><marker id="ga" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5fdd9d" stroke-width="2"/></marker></defs>
+      <!-- Row 0 -->
+      <text x="80" y="76" text-anchor="middle" fill="#4f8ef7" font-size="12" font-family="'JetBrains Mono',monospace">row 0</text>
+      <rect x="122" y="55" width="106" height="42" rx="6" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <rect x="232" y="55" width="106" height="42" rx="6" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <rect x="342" y="55" width="106" height="42" rx="6" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <rect x="452" y="55" width="106" height="42" rx="6" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <text x="175" y="80" text-anchor="middle" fill="#7fa8f0" font-size="12" font-family="'JetBrains Mono',monospace">[0][0]</text>
+      <text x="285" y="80" text-anchor="middle" fill="#7fa8f0" font-size="12" font-family="'JetBrains Mono',monospace">[0][1]</text>
+      <text x="395" y="80" text-anchor="middle" fill="#7fa8f0" font-size="12" font-family="'JetBrains Mono',monospace">[0][2]</text>
+      <text x="505" y="80" text-anchor="middle" fill="#7fa8f0" font-size="12" font-family="'JetBrains Mono',monospace">[0][3]</text>
+      <!-- Row 1 -->
+      <text x="80" y="131" text-anchor="middle" fill="#4f8ef7" font-size="12" font-family="'JetBrains Mono',monospace">row 1</text>
+      <rect x="122" y="110" width="106" height="42" rx="6" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <rect x="232" y="110" width="106" height="42" rx="6" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <rect x="342" y="110" width="106" height="42" rx="6" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <rect x="452" y="110" width="106" height="42" rx="6" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <text x="175" y="135" text-anchor="middle" fill="#7fa8f0" font-size="12" font-family="'JetBrains Mono',monospace">[1][0]</text>
+      <text x="285" y="135" text-anchor="middle" fill="#7fa8f0" font-size="12" font-family="'JetBrains Mono',monospace">[1][1]</text>
+      <text x="395" y="135" text-anchor="middle" fill="#7fa8f0" font-size="12" font-family="'JetBrains Mono',monospace">[1][2]</text>
+      <text x="505" y="135" text-anchor="middle" fill="#7fa8f0" font-size="12" font-family="'JetBrains Mono',monospace">[1][3]</text>
+      <!-- Row 2 -->
+      <text x="80" y="186" text-anchor="middle" fill="#4f8ef7" font-size="12" font-family="'JetBrains Mono',monospace">row 2</text>
+      <rect x="122" y="165" width="106" height="42" rx="6" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <rect x="232" y="165" width="106" height="42" rx="6" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <rect x="342" y="165" width="106" height="42" rx="6" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <rect x="452" y="165" width="106" height="42" rx="6" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <text x="175" y="190" text-anchor="middle" fill="#7fa8f0" font-size="12" font-family="'JetBrains Mono',monospace">[2][0]</text>
+      <text x="285" y="190" text-anchor="middle" fill="#7fa8f0" font-size="12" font-family="'JetBrains Mono',monospace">[2][1]</text>
+      <text x="395" y="190" text-anchor="middle" fill="#7fa8f0" font-size="12" font-family="'JetBrains Mono',monospace">[2][2]</text>
+      <text x="505" y="190" text-anchor="middle" fill="#7fa8f0" font-size="12" font-family="'JetBrains Mono',monospace">[2][3]</text>
+      <!-- Row arrow -->
+      <line x1="122" y1="230" x2="555" y2="230" stroke="#4f8ef7" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="338" y="250" text-anchor="middle" fill="#4f8ef7" font-size="11" font-family="'Syne',sans-serif">ROW — horizontal strip, same first index</text>
+    </svg>
+  </div>
+
+  <div class="card-row">
+    <div class="card java">
+      <div class="card-tag">First bracket</div>
+      <h4>Rows — [3]</h4>
+      <p>How many horizontal strips exist. In Java this is the count of row objects that will be created on the heap.</p>
+      <p><code>arr[3][4]</code> → 3 rows</p>
+    </div>
+    <div class="card cpp">
+      <div class="card-tag">Second bracket</div>
+      <h4>Columns — [4]</h4>
+      <p>How many cells wide each row is. In C this is the stride used in the offset formula to navigate flat memory.</p>
+      <p><code>arr[3][4]</code> → 4 columns</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════ SECTION 2 ═══════════════════════════════ -->
+<div class="section" id="s2">
+<div class="container">
+  <div class="section-num">02</div>
+  <h2>Java Memory Model — Array of References</h2>
+  <p>Java does <strong>not</strong> store a 2D grid. It stores an <strong>array of references</strong> (pointers), where each reference points to an independent row array living somewhere on the heap. When you write <code>int[][] arr = new int[3][4]</code>, Java creates <strong>4 separate objects</strong>: one primary reference array with 3 slots, and three separate <code>int[4]</code> arrays.</p>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">// Java heap after: int[][] arr = new int[3][4]</div>
+    <svg viewBox="0 0 640 340">
+      <defs><marker id="ja" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#4f8ef7" stroke-width="2"/></marker></defs>
+      <!-- Stack -->
+      <rect x="20" y="20" width="90" height="44" rx="8" fill="#1c2030" stroke="#2a2f42" stroke-width="0.5"/>
+      <text x="65" y="40" text-anchor="middle" fill="#7880a0" font-size="10" font-family="'JetBrains Mono',monospace">STACK</text>
+      <text x="65" y="56" text-anchor="middle" fill="#e4e8f5" font-size="11" font-family="'JetBrains Mono',monospace">arr ref</text>
+      <line x1="110" y1="42" x2="145" y2="42" stroke="#f5a623" stroke-width="1.5" marker-end="url(#ja)"/>
+      <!-- Primary array -->
+      <rect x="148" y="20" width="210" height="44" rx="8" fill="#3a2608" stroke="#f5a623" stroke-width="0.5"/>
+      <text x="253" y="40" text-anchor="middle" fill="#f5a623" font-size="11" font-family="'Syne',sans-serif" font-weight="700">Primary array</text>
+      <text x="253" y="56" text-anchor="middle" fill="#7880a0" font-size="10" font-family="'JetBrains Mono',monospace">int[3][] — 3 reference slots</text>
+      <!-- Ref slots -->
+      <rect x="158" y="72" width="54" height="28" rx="4" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="220" y="72" width="54" height="28" rx="4" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="282" y="72" width="54" height="28" rx="4" fill="#1c2030" stroke="#2a2f42"/>
+      <text x="185" y="90" text-anchor="middle" fill="#8899cc" font-size="10" font-family="'JetBrains Mono',monospace">ref[0]</text>
+      <text x="247" y="90" text-anchor="middle" fill="#8899cc" font-size="10" font-family="'JetBrains Mono',monospace">ref[1]</text>
+      <text x="309" y="90" text-anchor="middle" fill="#8899cc" font-size="10" font-family="'JetBrains Mono',monospace">ref[2]</text>
+      <!-- Arrows to rows -->
+      <path d="M185 100 Q185 130 90 148" stroke="#4f8ef7" stroke-width="1.5" fill="none" marker-end="url(#ja)"/>
+      <line x1="247" y1="100" x2="247" y2="148" stroke="#4f8ef7" stroke-width="1.5" fill="none" marker-end="url(#ja)"/>
+      <path d="M309 100 Q309 130 430 148" stroke="#4f8ef7" stroke-width="1.5" fill="none" marker-end="url(#ja)"/>
+      <!-- Row 0 -->
+      <rect x="20" y="150" width="145" height="38" rx="8" fill="#0d3028" stroke="#2dd4a8" stroke-width="0.5"/>
+      <text x="92" y="174" text-anchor="middle" fill="#2dd4a8" font-size="11" font-family="'Syne',sans-serif" font-weight="700">row 0 object</text>
+      <rect x="20" y="196" width="30" height="26" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="54" y="196" width="30" height="26" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="88" y="196" width="30" height="26" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="122" y="196" width="30" height="26" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <text x="35" y="213" text-anchor="middle" fill="#e4e8f5" font-size="10" font-family="'JetBrains Mono',monospace">12</text>
+      <text x="69" y="213" text-anchor="middle" fill="#e4e8f5" font-size="10" font-family="'JetBrains Mono',monospace">7</text>
+      <text x="103" y="213" text-anchor="middle" fill="#e4e8f5" font-size="10" font-family="'JetBrains Mono',monospace">3</text>
+      <text x="137" y="213" text-anchor="middle" fill="#e4e8f5" font-size="10" font-family="'JetBrains Mono',monospace">99</text>
+      <text x="35" y="235" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'JetBrains Mono',monospace">[0][0]</text>
+      <text x="69" y="235" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'JetBrains Mono',monospace">[0][1]</text>
+      <text x="103" y="235" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'JetBrains Mono',monospace">[0][2]</text>
+      <text x="137" y="235" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'JetBrains Mono',monospace">[0][3]</text>
+      <!-- Row 1 -->
+      <rect x="185" y="150" width="145" height="38" rx="8" fill="#0d3028" stroke="#2dd4a8" stroke-width="0.5"/>
+      <text x="257" y="174" text-anchor="middle" fill="#2dd4a8" font-size="11" font-family="'Syne',sans-serif" font-weight="700">row 1 object</text>
+      <rect x="185" y="196" width="30" height="26" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="219" y="196" width="30" height="26" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="253" y="196" width="30" height="26" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="287" y="196" width="30" height="26" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <text x="200" y="213" text-anchor="middle" fill="#e4e8f5" font-size="10" font-family="'JetBrains Mono',monospace">5</text>
+      <text x="234" y="213" text-anchor="middle" fill="#e4e8f5" font-size="10" font-family="'JetBrains Mono',monospace">41</text>
+      <text x="268" y="213" text-anchor="middle" fill="#e4e8f5" font-size="10" font-family="'JetBrains Mono',monospace">0</text>
+      <text x="302" y="213" text-anchor="middle" fill="#e4e8f5" font-size="10" font-family="'JetBrains Mono',monospace">8</text>
+      <text x="200" y="235" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'JetBrains Mono',monospace">[1][0]</text>
+      <text x="234" y="235" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'JetBrains Mono',monospace">[1][1]</text>
+      <text x="268" y="235" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'JetBrains Mono',monospace">[1][2]</text>
+      <text x="302" y="235" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'JetBrains Mono',monospace">[1][3]</text>
+      <!-- Row 2 -->
+      <rect x="360" y="150" width="145" height="38" rx="8" fill="#0d3028" stroke="#2dd4a8" stroke-width="0.5"/>
+      <text x="432" y="174" text-anchor="middle" fill="#2dd4a8" font-size="11" font-family="'Syne',sans-serif" font-weight="700">row 2 object</text>
+      <rect x="360" y="196" width="30" height="26" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="394" y="196" width="30" height="26" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="428" y="196" width="30" height="26" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="462" y="196" width="30" height="26" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <text x="375" y="213" text-anchor="middle" fill="#e4e8f5" font-size="10" font-family="'JetBrains Mono',monospace">2</text>
+      <text x="409" y="213" text-anchor="middle" fill="#e4e8f5" font-size="10" font-family="'JetBrains Mono',monospace">17</text>
+      <text x="443" y="213" text-anchor="middle" fill="#e4e8f5" font-size="10" font-family="'JetBrains Mono',monospace">55</text>
+      <text x="477" y="213" text-anchor="middle" fill="#e4e8f5" font-size="10" font-family="'JetBrains Mono',monospace">6</text>
+      <text x="375" y="235" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'JetBrains Mono',monospace">[2][0]</text>
+      <text x="409" y="235" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'JetBrains Mono',monospace">[2][1]</text>
+      <text x="443" y="235" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'JetBrains Mono',monospace">[2][2]</text>
+      <text x="477" y="235" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'JetBrains Mono',monospace">[2][3]</text>
+      <!-- Scattered note -->
+      <rect x="535" y="150" width="95" height="72" rx="8" fill="#3a2608" stroke="#f5a623" stroke-width="0.5"/>
+      <text x="582" y="170" text-anchor="middle" fill="#f5a623" font-size="10" font-family="'Syne',sans-serif" font-weight="700">Key fact</text>
+      <text x="582" y="186" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'Syne',sans-serif">3 separate</text>
+      <text x="582" y="198" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'Syne',sans-serif">heap objects</text>
+      <text x="582" y="210" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'Syne',sans-serif">scattered in</text>
+      <text x="582" y="222" text-anchor="middle" fill="#7880a0" font-size="9" font-family="'Syne',sans-serif">RAM</text>
+      <!-- Access annotation -->
+      <text x="320" y="278" text-anchor="middle" fill="#7880a0" font-size="11" font-family="'Syne',sans-serif">Accessing arr[r][c] = 2 pointer hops (primary array → row object → element)</text>
+      <text x="320" y="296" text-anchor="middle" fill="#7880a0" font-size="11" font-family="'Syne',sans-serif">arr.length = 3 (rows)   ·   arr[0].length = 4 (cols of row 0)</text>
+    </svg>
+  </div>
+
+  <div class="rule">
+    <div class="rule-icon">🧠</div>
+    <div class="rule-text"><strong>The key insight</strong>Java's 2D array is not a grid. It's an array whose slots hold the addresses of other arrays. Those inner arrays are fully independent objects. This is why each row can have a different length (jagged arrays), and why <code>arr[r].length</code> is a separate property per row.</div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════ SECTION 3 ═══════════════════════════════ -->
+<div class="section" id="s3">
+<div class="container">
+  <div class="section-num">03</div>
+  <h2>C / C++ Memory Model — One Flat Block</h2>
+  <p>C allocates a <strong>single contiguous block</strong> of integers. There are no row objects, no pointers, no indirection. The compiler uses the formula <strong>offset = row × COLS + col</strong> to find any element. What you call "rows" are just named regions inside one big flat line of memory.</p>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">// C: int matrix[3][4] — 12 consecutive integers in RAM</div>
+    <svg viewBox="0 0 640 200">
+      <!-- Flat block label -->
+      <rect x="20" y="20" width="600" height="40" rx="8" fill="#0d3028" stroke="#2dd4a8" stroke-width="0.5"/>
+      <text x="320" y="45" text-anchor="middle" fill="#2dd4a8" font-size="12" font-family="'Syne',sans-serif" font-weight="700">ONE contiguous block of RAM</text>
+      <!-- 12 cells -->
+      <rect x="20" y="72" width="44" height="40" rx="3" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <rect x="66" y="72" width="44" height="40" rx="3" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <rect x="112" y="72" width="44" height="40" rx="3" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <rect x="158" y="72" width="44" height="40" rx="3" fill="#1a2d55" stroke="#4f8ef7" stroke-width="0.5"/>
+      <!-- boundary -->
+      <line x1="203" y1="66" x2="203" y2="118" stroke="#f5a623" stroke-width="2" stroke-dasharray="4 2"/>
+      <rect x="204" y="72" width="44" height="40" rx="3" fill="#0d3028" stroke="#2dd4a8" stroke-width="0.5"/>
+      <rect x="250" y="72" width="44" height="40" rx="3" fill="#0d3028" stroke="#2dd4a8" stroke-width="0.5"/>
+      <rect x="296" y="72" width="44" height="40" rx="3" fill="#0d3028" stroke="#2dd4a8" stroke-width="0.5"/>
+      <rect x="342" y="72" width="44" height="40" rx="3" fill="#0d3028" stroke="#2dd4a8" stroke-width="0.5"/>
+      <!-- boundary -->
+      <line x1="387" y1="66" x2="387" y2="118" stroke="#f5a623" stroke-width="2" stroke-dasharray="4 2"/>
+      <rect x="388" y="72" width="44" height="40" rx="3" fill="#3a2608" stroke="#f5a623" stroke-width="0.5"/>
+      <rect x="434" y="72" width="44" height="40" rx="3" fill="#3a2608" stroke="#f5a623" stroke-width="0.5"/>
+      <rect x="480" y="72" width="44" height="40" rx="3" fill="#3a2608" stroke="#f5a623" stroke-width="0.5"/>
+      <rect x="526" y="72" width="44" height="40" rx="3" fill="#3a2608" stroke="#f5a623" stroke-width="0.5"/>
+      <!-- Index labels -->
+      <text x="42" y="97" text-anchor="middle" fill="#7fa8f0" font-size="10" font-family="'JetBrains Mono',monospace">0,0</text>
+      <text x="88" y="97" text-anchor="middle" fill="#7fa8f0" font-size="10" font-family="'JetBrains Mono',monospace">0,1</text>
+      <text x="134" y="97" text-anchor="middle" fill="#7fa8f0" font-size="10" font-family="'JetBrains Mono',monospace">0,2</text>
+      <text x="180" y="97" text-anchor="middle" fill="#7fa8f0" font-size="10" font-family="'JetBrains Mono',monospace">0,3</text>
+      <text x="226" y="97" text-anchor="middle" fill="#5fdd9d" font-size="10" font-family="'JetBrains Mono',monospace">1,0</text>
+      <text x="272" y="97" text-anchor="middle" fill="#5fdd9d" font-size="10" font-family="'JetBrains Mono',monospace">1,1</text>
+      <text x="318" y="97" text-anchor="middle" fill="#5fdd9d" font-size="10" font-family="'JetBrains Mono',monospace">1,2</text>
+      <text x="364" y="97" text-anchor="middle" fill="#5fdd9d" font-size="10" font-family="'JetBrains Mono',monospace">1,3</text>
+      <text x="410" y="97" text-anchor="middle" fill="#f5a623" font-size="10" font-family="'JetBrains Mono',monospace">2,0</text>
+      <text x="456" y="97" text-anchor="middle" fill="#f5a623" font-size="10" font-family="'JetBrains Mono',monospace">2,1</text>
+      <text x="502" y="97" text-anchor="middle" fill="#f5a623" font-size="10" font-family="'JetBrains Mono',monospace">2,2</text>
+      <text x="548" y="97" text-anchor="middle" fill="#f5a623" font-size="10" font-family="'JetBrains Mono',monospace">2,3</text>
+      <!-- Offset labels -->
+      <text x="42" y="115" text-anchor="middle" fill="#2a2f42" font-size="9" font-family="'JetBrains Mono',monospace">idx 0</text>
+      <text x="88" y="115" text-anchor="middle" fill="#2a2f42" font-size="9" font-family="'JetBrains Mono',monospace">idx 1</text>
+      <text x="134" y="115" text-anchor="middle" fill="#2a2f42" font-size="9" font-family="'JetBrains Mono',monospace">idx 2</text>
+      <text x="180" y="115" text-anchor="middle" fill="#2a2f42" font-size="9" font-family="'JetBrains Mono',monospace">idx 3</text>
+      <text x="226" y="115" text-anchor="middle" fill="#2a2f42" font-size="9" font-family="'JetBrains Mono',monospace">idx 4</text>
+      <!-- Row labels below -->
+      <text x="100" y="140" text-anchor="middle" fill="#4f8ef7" font-size="11" font-family="'Syne',sans-serif">row 0</text>
+      <text x="284" y="140" text-anchor="middle" fill="#2dd4a8" font-size="11" font-family="'Syne',sans-serif">row 1</text>
+      <text x="468" y="140" text-anchor="middle" fill="#f5a623" font-size="11" font-family="'Syne',sans-serif">row 2</text>
+      <text x="320" y="168" text-anchor="middle" fill="#5a6480" font-size="11" font-family="'Syne',sans-serif">No pointer chasing — offset = row × 4 + col</text>
+      <text x="320" y="185" text-anchor="middle" fill="#5a6480" font-size="11" font-family="'Syne',sans-serif">e.g. matrix[1][2] → offset = 1×4+2 = 6 → array[6]</text>
+    </svg>
+  </div>
+
+  <div class="rule teal">
+    <div class="rule-icon">⚡</div>
+    <div class="rule-text"><strong>Why C is faster for matrix traversal</strong>When you loop row-by-row in C, you're reading adjacent memory locations. The CPU's prefetcher loads them ahead of time into L1 cache. In Java, each row is a separate heap object — they may be far apart in RAM, causing cache misses.</div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════ SECTION 4 ═══════════════════════════════ -->
+<div class="section" id="s4">
+<div class="container">
+  <div class="section-num">04</div>
+  <h2>Declaration Rules — The Root Cause</h2>
+  <p>Because the two languages have fundamentally different memory models, the dimension that <em>must</em> be provided at compile time is <strong>opposite</strong> in each language. This is not arbitrary — each language requires exactly the dimension it needs to do its first step of memory setup.</p>
+
+  <div class="card-row">
+    <div class="card java">
+      <div class="card-tag">Java rule</div>
+      <h4>LEFT dimension (rows) must be given</h4>
+      <p>Java's first job is to build the primary reference array. To allocate it, Java must know <strong>how many reference slots</strong> to create. That count is the row count — the left bracket.</p>
+      <p>Once the primary array exists, column sizes can be filled in later (per row, even differently). That's why <code>new int[3][]</code> is valid.</p>
+      <p>Without the left dimension, Java can't even begin. <code>new int[][3]</code> fails instantly.</p>
+    </div>
+    <div class="card cpp">
+      <div class="card-tag">C / C++ rule</div>
+      <h4>RIGHT dimension (cols) must be given</h4>
+      <p>C's formula is <code>offset = row × COLS + col</code>. The compiler bakes this into every array access at compile time. Without <strong>COLS</strong> the formula is broken — the compiler can't generate any access code.</p>
+      <p>Row count can be inferred from the initializer or provided separately. <code>int m[][3]</code> is valid — the compiler counts rows from context.</p>
+      <p>Without the right dimension, the formula is undefined. <code>int m[3][]</code> fails.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════ SECTION 5 ═══════════════════════════════ -->
+<div class="section" id="s5">
+<div class="container">
+  <div class="section-num">05</div>
+  <h2>Why <code>int[][3]</code> Fails in Java — Step by Step</h2>
+  <p>The Java compiler reads array dimensions strictly left to right. Here's exactly what happens when it encounters <code>new int[][3]</code>:</p>
+
+  <div class="stepper">
+    <div class="stepper-nav">
+      <button class="step-btn" id="prev-j" onclick="jstep(-1)" disabled>← Prev</button>
+      <span class="step-counter" id="jcounter">Step 1 of 4</span>
+      <button class="step-btn" id="next-j" onclick="jstep(1)">Next →</button>
+    </div>
+    <div id="j-steps">
+      <div class="step-panel active" data-j="0">
+        <div class="step-body">
+          <div class="step-card j">
+            <h5>Java compiler reads</h5>
+            <ul><li>Sees: <code>new int</code></li><li>OK — int is a primitive type</li><li>Preparing to allocate an array...</li></ul>
+            <div class="step-result warn">Ready to read dimensions</div>
+          </div>
+          <div class="step-card c" style="opacity:0.3"><h5>Ignore C for now</h5><ul><li>(watching Java fail)</li></ul></div>
+        </div>
+      </div>
+      <div class="step-panel" data-j="1">
+        <div class="step-body">
+          <div class="step-card j">
+            <h5>Java reads first bracket: [ ]</h5>
+            <ul><li>Left bracket is EMPTY</li><li>Java's first job: build the primary reference array</li><li>Question: how many ref-slots to allocate?</li><li>Answer: UNKNOWN — no number given</li></ul>
+            <div class="step-result err">🚫 STUCK — can't allocate primary array without row count</div>
+          </div>
+          <div class="step-card c" style="opacity:0.3"><h5>Ignore C for now</h5><ul><li>(watching Java fail)</li></ul></div>
+        </div>
+      </div>
+      <div class="step-panel" data-j="2">
+        <div class="step-body">
+          <div class="step-card j">
+            <h5>Java reads second bracket: [3]</h5>
+            <ul><li>Cols = 3. But it doesn't matter.</li><li>Java still has no primary array built</li><li>There is nowhere to store the row references</li><li>Compiler cannot proceed at all</li></ul>
+            <div class="step-result err">🚫 Compile Error — left dimension required first</div>
+          </div>
+          <div class="step-card c" style="opacity:0.3"><h5>Ignore C for now</h5><ul><li>(watching Java fail)</li></ul></div>
+        </div>
+      </div>
+      <div class="step-panel" data-j="3">
+        <div class="step-body">
+          <div class="step-card j">
+            <h5>What should have been written</h5>
+            <ul><li><code>new int[3][]</code> — rows first</li><li>Java builds primary array (3 ref slots)</li><li>Cols can be assigned row-by-row later</li><li>Even jagged: rows can differ in size</li></ul>
+            <div class="step-result ok">✓ new int[3][] compiles fine</div>
+          </div>
+          <div class="step-card c" style="opacity:0.3"><h5>Ignore C for now</h5><ul><li>(watching Java succeed)</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════ SECTION 6 ═══════════════════════════════ -->
+<div class="section" id="s6">
+<div class="container">
+  <div class="section-num">06</div>
+  <h2>Why <code>int[][3]</code> Works in C / C++ — Step by Step</h2>
+  <p>C's compiler needs a completely different piece of information. It doesn't build objects — it generates a math formula. Here's what happens in C when it sees <code>int m[][3]</code>:</p>
+
+  <div class="stepper">
+    <div class="stepper-nav">
+      <button class="step-btn" id="prev-c" onclick="cstep(-1)" disabled>← Prev</button>
+      <span class="step-counter" id="ccounter">Step 1 of 4</span>
+      <button class="step-btn" id="next-c" onclick="cstep(1)">Next →</button>
+    </div>
+    <div id="c-steps">
+      <div class="step-panel active" data-c="0">
+        <div class="step-body">
+          <div class="step-card c">
+            <h5>C compiler reads</h5>
+            <ul><li>Sees: <code>int m</code></li><li>OK — int array being declared</li><li>Preparing to generate access formula...</li></ul>
+            <div class="step-result warn">Ready to read dimensions</div>
+          </div>
+          <div class="step-card j" style="opacity:0.3"><h5>Ignore Java for now</h5><ul><li>(watching C succeed)</li></ul></div>
+        </div>
+      </div>
+      <div class="step-panel" data-c="1">
+        <div class="step-body">
+          <div class="step-card c">
+            <h5>C reads first bracket: [ ]</h5>
+            <ul><li>Left bracket is EMPTY — rows unknown</li><li>That's OK! C doesn't build a row-object structure</li><li>C will figure out row count from the initializer, or it's a function parameter</li><li>Moving on...</li></ul>
+            <div class="step-result ok">✓ No problem — rows not needed yet</div>
+          </div>
+          <div class="step-card j" style="opacity:0.3"><h5>Ignore Java for now</h5><ul><li>(watching C succeed)</li></ul></div>
+        </div>
+      </div>
+      <div class="step-panel" data-c="2">
+        <div class="step-body">
+          <div class="step-card c">
+            <h5>C reads second bracket: [3]</h5>
+            <ul><li>COLS = 3 — this is what C actually needed!</li><li>Formula is now complete:</li><li>offset = row × 3 + col</li><li>Compiler can generate all access code</li></ul>
+            <div class="step-result ok">✓ Formula ready — can access any element</div>
+          </div>
+          <div class="step-card j" style="opacity:0.3"><h5>Ignore Java for now</h5><ul><li>(watching C succeed)</li></ul></div>
+        </div>
+      </div>
+      <div class="step-panel" data-c="3">
+        <div class="step-body">
+          <div class="step-card c">
+            <h5>What fails in C</h5>
+            <ul><li><code>int m[3][]</code> — rows given, cols omitted</li><li>Formula needs COLS: offset = row × ??? + col</li><li>Without COLS the formula is broken</li><li>Compiler cannot generate access code</li></ul>
+            <div class="step-result err">🚫 int m[3][] fails in C/C++ — cols required</div>
+          </div>
+          <div class="step-card j" style="opacity:0.3"><h5>Ignore Java for now</h5><ul><li>(watching C fail)</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════ SECTION 7 ═══════════════════════════════ -->
+<div class="section" id="s7">
+<div class="container">
+  <div class="section-num">07</div>
+  <h2>All Four Declaration Cases</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Syntax</th>
+          <th>Java</th>
+          <th>C / C++</th>
+          <th>Why</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mono-val">int[3][4]</td>
+          <td><span class="tick">✓ Valid</span></td>
+          <td><span class="tick">✓ Valid</span></td>
+          <td>Both dimensions given — works everywhere</td>
+        </tr>
+        <tr>
+          <td class="mono-val">int[3][]</td>
+          <td><span class="tick">✓ Valid</span></td>
+          <td><span class="cross">✗ Error</span></td>
+          <td>Java: rows known, cols set per-row. C: can't compute formula without cols</td>
+        </tr>
+        <tr>
+          <td class="mono-val">int[][3]</td>
+          <td><span class="cross">✗ Error</span></td>
+          <td><span class="tick">✓ Valid</span></td>
+          <td>Java: can't build primary array without rows. C: formula offset=row×3+col works</td>
+        </tr>
+        <tr>
+          <td class="mono-val">int[][]</td>
+          <td><span class="tick">✓ as type</span></td>
+          <td><span class="cross">✗ Error</span></td>
+          <td>Java: valid as variable type declaration (no allocation yet). C: needs both for formula</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rule amber">
+    <div class="rule-icon">🔑</div>
+    <div class="rule-text"><strong>The one-line rule to remember</strong>Java requires the <strong>LEFT</strong> (rows) because it builds objects. C requires the <strong>RIGHT</strong> (cols) because it computes a formula. The required dimension is the opposite in each language because their memory models are opposite.</div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════ SECTION 8 ═══════════════════════════════ -->
+<div class="section" id="s8">
+<div class="container">
+  <div class="section-num">08</div>
+  <h2>Jagged Arrays — Java's Superpower, C's Impossibility</h2>
+  <p>Because Java rows are independent objects, each row can have a <strong>different size</strong>. This is called a jagged (or ragged) array. C's flat-memory model makes true jagged arrays impossible — every row must be the same width for the formula to work.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-dot" style="background:#4f8ef7"></span>Java — building a jagged array</div>
+    <pre><span class="c-cm">// Step 1: build the primary array (row count must be known)</span>
+<span class="c-kw">int</span>[][] jagged = <span class="c-kw">new int</span>[<span class="c-num">3</span>][];
+
+<span class="c-cm">// Step 2: each row gets its OWN size</span>
+jagged[<span class="c-num">0</span>] = <span class="c-kw">new int</span>[<span class="c-num">2</span>];   <span class="c-cm">// row 0 has 2 elements</span>
+jagged[<span class="c-num">1</span>] = <span class="c-kw">new int</span>[<span class="c-num">4</span>];   <span class="c-cm">// row 1 has 4 elements</span>
+jagged[<span class="c-num">2</span>] = <span class="c-kw">new int</span>[<span class="c-num">1</span>];   <span class="c-cm">// row 2 has 1 element</span>
+
+<span class="c-cm">// Traversal — use jagged[row].length per row!</span>
+<span class="c-kw">for</span> (<span class="c-kw">int</span> r = <span class="c-num">0</span>; r &lt; jagged.length; r++) {
+    <span class="c-kw">for</span> (<span class="c-kw">int</span> c = <span class="c-num">0</span>; c &lt; jagged[r].length; c++) {  <span class="c-cm">// ← per-row length!</span>
+        System.out.print(jagged[r][c] + <span class="c-str">" "</span>);
+    }
+}</pre>
+  </div>
+
+  <div class="diagram-wrap">
+    <div class="diagram-title">// Jagged array in memory — each row object is a different size</div>
+    <svg viewBox="0 0 640 220">
+      <defs><marker id="jja" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#4f8ef7" stroke-width="2"/></marker></defs>
+      <!-- Primary array -->
+      <rect x="20" y="20" width="160" height="40" rx="8" fill="#3a2608" stroke="#f5a623" stroke-width="0.5"/>
+      <text x="100" y="44" text-anchor="middle" fill="#f5a623" font-size="11" font-family="'Syne',sans-serif" font-weight="700">primary array [3 refs]</text>
+      <rect x="28" y="68" width="40" height="26" rx="4" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="76" y="68" width="40" height="26" rx="4" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="124" y="68" width="40" height="26" rx="4" fill="#1c2030" stroke="#2a2f42"/>
+      <text x="48" y="85" text-anchor="middle" fill="#8899cc" font-size="9" font-family="'JetBrains Mono',monospace">ref[0]</text>
+      <text x="96" y="85" text-anchor="middle" fill="#8899cc" font-size="9" font-family="'JetBrains Mono',monospace">ref[1]</text>
+      <text x="144" y="85" text-anchor="middle" fill="#8899cc" font-size="9" font-family="'JetBrains Mono',monospace">ref[2]</text>
+      <!-- Arrows -->
+      <path d="M48 94 Q48 120 110 140" stroke="#4f8ef7" stroke-width="1.5" fill="none" marker-end="url(#jja)"/>
+      <path d="M96 94 Q96 120 290 140" stroke="#4f8ef7" stroke-width="1.5" fill="none" marker-end="url(#jja)"/>
+      <path d="M144 94 Q144 120 500 140" stroke="#4f8ef7" stroke-width="1.5" fill="none" marker-end="url(#jja)"/>
+      <!-- Row 0 — 2 cells -->
+      <rect x="80" y="140" width="80" height="36" rx="6" fill="#0d3028" stroke="#2dd4a8" stroke-width="0.5"/>
+      <text x="120" y="162" text-anchor="middle" fill="#2dd4a8" font-size="10" font-family="'Syne',sans-serif" font-weight="700">row 0 [size=2]</text>
+      <rect x="84" y="180" width="30" height="24" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="118" y="180" width="30" height="24" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <text x="99" y="196" text-anchor="middle" fill="#e4e8f5" font-size="9" font-family="'JetBrains Mono',monospace">[0][0]</text>
+      <text x="133" y="196" text-anchor="middle" fill="#e4e8f5" font-size="9" font-family="'JetBrains Mono',monospace">[0][1]</text>
+      <!-- Row 1 — 4 cells -->
+      <rect x="220" y="140" width="160" height="36" rx="6" fill="#0d3028" stroke="#2dd4a8" stroke-width="0.5"/>
+      <text x="300" y="162" text-anchor="middle" fill="#2dd4a8" font-size="10" font-family="'Syne',sans-serif" font-weight="700">row 1 [size=4]</text>
+      <rect x="224" y="180" width="30" height="24" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="258" y="180" width="30" height="24" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="292" y="180" width="30" height="24" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <rect x="326" y="180" width="30" height="24" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <!-- Row 2 — 1 cell -->
+      <rect x="460" y="140" width="80" height="36" rx="6" fill="#0d3028" stroke="#2dd4a8" stroke-width="0.5"/>
+      <text x="500" y="162" text-anchor="middle" fill="#2dd4a8" font-size="10" font-family="'Syne',sans-serif" font-weight="700">row 2 [size=1]</text>
+      <rect x="475" y="180" width="30" height="24" rx="3" fill="#1c2030" stroke="#2a2f42"/>
+      <text x="490" y="196" text-anchor="middle" fill="#e4e8f5" font-size="9" font-family="'JetBrains Mono',monospace">[2][0]</text>
+    </svg>
+  </div>
+
+  <h3>DSA Use Case — Adjacency List for Graphs</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-dot" style="background:#2dd4a8"></span>Java — graph adjacency list using jagged array</div>
+    <pre><span class="c-cm">// A graph with 5 nodes. Node 0 connects to 2 others, node 1 to 4 others, etc.</span>
+<span class="c-kw">int</span>[][] adj = <span class="c-kw">new int</span>[<span class="c-num">5</span>][];
+
+adj[<span class="c-num">0</span>] = <span class="c-kw">new int</span>[]{<span class="c-num">1</span>, <span class="c-num">2</span>};            <span class="c-cm">// node 0 has 2 neighbours</span>
+adj[<span class="c-num">1</span>] = <span class="c-kw">new int</span>[]{<span class="c-num">0</span>, <span class="c-num">2</span>, <span class="c-num">3</span>, <span class="c-num">4</span>};    <span class="c-cm">// node 1 has 4 neighbours</span>
+adj[<span class="c-num">2</span>] = <span class="c-kw">new int</span>[]{<span class="c-num">0</span>, <span class="c-num">1</span>};            <span class="c-cm">// node 2 has 2 neighbours</span>
+
+<span class="c-cm">// Much more memory-efficient than a 5×5 grid (25 cells vs 8 cells used)</span>
+<span class="c-cm">// This is how most graph problems are represented in competitive programming!</span></pre>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════ SECTION 9 ═══════════════════════════════ -->
+<div class="section" id="s9">
+<div class="container">
+  <div class="section-num">09</div>
+  <h2>DSA Cheat Sheet</h2>
+
+  <h3>Java — Quick Reference</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-dot" style="background:#4f8ef7"></span>Java 2D array patterns</div>
+    <pre><span class="c-kw">int</span>[][] m = <span class="c-kw">new int</span>[<span class="c-num">3</span>][<span class="c-num">4</span>];   <span class="c-cm">// 3 rows, 4 cols — standard</span>
+<span class="c-kw">int</span>[][] j = <span class="c-kw">new int</span>[<span class="c-num">3</span>][];    <span class="c-cm">// jagged — assign per row</span>
+
+m.length       <span class="c-cm">// → 3  (number of rows)</span>
+m[<span class="c-num">0</span>].length    <span class="c-cm">// → 4  (number of cols in row 0)</span>
+m[<span class="c-num">1</span>].length    <span class="c-cm">// → 4  (same for uniform, can differ for jagged)</span>
+
+<span class="c-cm">// Safe traversal template</span>
+<span class="c-kw">for</span> (<span class="c-kw">int</span> r = <span class="c-num">0</span>; r &lt; m.length; r++) {
+    <span class="c-kw">for</span> (<span class="c-kw">int</span> c = <span class="c-num">0</span>; c &lt; m[r].length; c++) { <span class="c-cm">// use m[r].length not m[0].length for jagged safety</span>
+        <span class="c-kw">int</span> val = m[r][c];
+    }
+}
+
+<span class="c-cm">// For-each (read-only)</span>
+<span class="c-kw">for</span> (<span class="c-kw">int</span>[] row : m)
+    <span class="c-kw">for</span> (<span class="c-kw">int</span> val : row)
+        System.out.println(val);</pre>
+  </div>
+
+  <h3>C / C++ — Quick Reference</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-dot" style="background:#2dd4a8"></span>C/C++ 2D array patterns</div>
+    <pre><span class="c-kw">int</span> m[<span class="c-num">3</span>][<span class="c-num">4</span>];              <span class="c-cm">// 3 rows, 4 cols — stack allocated</span>
+<span class="c-kw">int</span> m[][<span class="c-num">4</span>] = {{...}};    <span class="c-cm">// cols required, rows inferred</span>
+
+<span class="c-cm">// Size (only works for stack arrays, not pointers)</span>
+<span class="c-kw">int</span> rows = <span class="c-kw">sizeof</span>(m) / <span class="c-kw">sizeof</span>(m[<span class="c-num">0</span>]);    <span class="c-cm">// → 3</span>
+<span class="c-kw">int</span> cols = <span class="c-kw">sizeof</span>(m[<span class="c-num">0</span>]) / <span class="c-kw">sizeof</span>(<span class="c-kw">int</span>); <span class="c-cm">// → 4</span>
+
+<span class="c-cm">// Traversal — row-by-row is cache-optimal</span>
+<span class="c-kw">for</span> (<span class="c-kw">int</span> r = <span class="c-num">0</span>; r &lt; <span class="c-num">3</span>; r++)
+    <span class="c-kw">for</span> (<span class="c-kw">int</span> c = <span class="c-num">0</span>; c &lt; <span class="c-num">4</span>; c++)
+        m[r][c];   <span class="c-cm">// compiler sees: *(m + r*4 + c)</span></pre>
+  </div>
+
+  <h3>Common DSA Patterns</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Pattern</th><th>Java</th><th>C/C++</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>DP table</td><td class="tick">✓</td><td class="tick">✓</td><td>Use int[rows][cols] — fixed size, known at init</td></tr>
+        <tr><td>BFS grid</td><td class="tick">✓</td><td class="tick">✓</td><td>Usually int[R][C] visited array; row-by-row loop</td></tr>
+        <tr><td>Adjacency list</td><td class="tick">✓ (jagged)</td><td>Needs pointer-of-pointers</td><td>Java's jagged array is perfect here</td></tr>
+        <tr><td>Rotation / transpose</td><td class="tick">✓</td><td class="tick">✓</td><td>Swap [i][j] with [j][i] in-place for square matrix</td></tr>
+        <tr><td>Spiral order</td><td class="tick">✓</td><td class="tick">✓</td><td>4-boundary pointer walk, shrink inward</td></tr>
+        <tr><td>Cache efficiency</td><td style="color:var(--red)">Slower (heap scatter)</td><td class="tick">Faster (contiguous)</td><td>Always traverse row-first in both</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rule red">
+    <div class="rule-icon">⚠️</div>
+    <div class="rule-text"><strong>Common mistake in Java DSA</strong>Never use <code>m[0].length</code> as the column bound when traversing a jagged array. Use <code>m[r].length</code> inside the row loop. For uniform arrays it doesn't matter, but for jagged ones it will throw an ArrayIndexOutOfBoundsException.</div>
+  </div>
+</div>
+</div>
+
+<footer>
+  Java 2D Arrays — Complete Reference &nbsp;·&nbsp; Generated from your learning session &nbsp;·&nbsp; Covers: rows, columns, Java heap model, C flat model, declaration rules, jagged arrays, DSA patterns
+</footer>
+
+<script>
+  // Java stepper
+  let jCur = 0;
+  const jPanels = document.querySelectorAll('[data-j]');
+  function jstep(dir) {
+    jPanels[jCur].classList.remove('active');
+    jCur = Math.max(0, Math.min(jPanels.length-1, jCur+dir));
+    jPanels[jCur].classList.add('active');
+    document.getElementById('jcounter').textContent = `Step ${jCur+1} of ${jPanels.length}`;
+    document.getElementById('prev-j').disabled = jCur===0;
+    document.getElementById('next-j').disabled = jCur===jPanels.length-1;
+  }
+
+  // C stepper
+  let cCur = 0;
+  const cPanels = document.querySelectorAll('[data-c]');
+  function cstep(dir) {
+    cPanels[cCur].classList.remove('active');
+    cCur = Math.max(0, Math.min(cPanels.length-1, cCur+dir));
+    cPanels[cCur].classList.add('active');
+    document.getElementById('ccounter').textContent = `Step ${cCur+1} of ${cPanels.length}`;
+    document.getElementById('prev-c').disabled = cCur===0;
+    document.getElementById('next-c').disabled = cCur===cPanels.length-1;
+  }
+</script>
+</body>
+</html>
